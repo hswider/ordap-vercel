@@ -93,6 +93,7 @@ export default function ZamowieniaPage() {
   const [selectedChannel, setSelectedChannel] = useState('');
   const [statuses, setStatuses] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState(null);
+  const [expandedCategories, setExpandedCategories] = useState({});
 
   // Fetch available channels and statuses
   useEffect(() => {
@@ -211,26 +212,47 @@ export default function ZamowieniaPage() {
     return statusMap[status]?.color || 'bg-gray-100 text-gray-800';
   };
 
-  // Sortowanie statusów po kolorach: niebieski, żółty, pomarańczowy, czerwony, zielony, szary, fioletowy
-  const getColorOrder = (color) => {
-    if (color.includes('blue')) return 1;
-    if (color.includes('yellow')) return 2;
-    if (color.includes('orange')) return 3;
-    if (color.includes('red')) return 4;
-    if (color.includes('green')) return 5;
-    if (color.includes('gray')) return 6;
-    if (color.includes('purple')) return 7;
-    return 8;
+  // Statusy należące do kategorii "Inne"
+  const inneStatuses = [63, 231, 69, 78, 161, 217, 100, 4, 110, 85, 19, 16, 60, 188, 13, 10];
+
+  // Grupowanie statusów po kategoriach
+  const getStatusCategory = (status, color) => {
+    if (inneStatuses.includes(status)) return 'inne';
+    if (color.includes('blue')) return 'nowe';
+    if (color.includes('yellow')) return 'realizacja';
+    if (color.includes('orange')) return 'pilne';
+    if (color.includes('red')) return 'bardzo_pilne';
+    return 'inne';
   };
 
-  const sortedStatuses = [...statuses].sort((a, b) => {
-    const colorA = getStatusColor(a.status);
-    const colorB = getStatusColor(b.status);
-    const orderA = getColorOrder(colorA);
-    const orderB = getColorOrder(colorB);
-    if (orderA !== orderB) return orderA - orderB;
-    return b.count - a.count; // W ramach tego samego koloru sortuj po liczbie zamówień
+  const groupedStatuses = statuses.reduce((acc, s) => {
+    const color = getStatusColor(s.status);
+    const category = getStatusCategory(s.status, color);
+    if (!acc[category]) acc[category] = [];
+    acc[category].push(s);
+    return acc;
+  }, {});
+
+  // Sortuj każdą grupę po liczbie zamówień
+  Object.keys(groupedStatuses).forEach(key => {
+    groupedStatuses[key].sort((a, b) => b.count - a.count);
   });
+
+  const categories = [
+    { key: 'nowe', label: 'Nowe', color: 'bg-blue-100 text-blue-800' },
+    { key: 'realizacja', label: 'W realizacji', color: 'bg-yellow-100 text-yellow-800' },
+    { key: 'pilne', label: 'Pilne', color: 'bg-orange-100 text-orange-800' },
+    { key: 'bardzo_pilne', label: 'Bardzo Pilne', color: 'bg-red-100 text-red-800' },
+    { key: 'inne', label: 'Inne', color: 'bg-gray-100 text-gray-800' },
+  ];
+
+  const toggleCategory = (key) => {
+    setExpandedCategories(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const getCategoryCount = (key) => {
+    return groupedStatuses[key]?.reduce((sum, s) => sum + s.count, 0) || 0;
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -256,31 +278,64 @@ export default function ZamowieniaPage() {
         </div>
 
         {/* Status Filter */}
-        {sortedStatuses.length > 0 && (
+        {statuses.length > 0 && (
           <div className="mb-4 bg-white rounded-lg shadow p-3">
-            <div className="text-xs text-gray-500 mb-2">Status</div>
-            <div className="flex flex-wrap gap-2">
-              {sortedStatuses.map((s) => (
-                <button
-                  key={s.status}
-                  onClick={() => handleStatusChange(s.status)}
-                  className={`px-2 py-1 rounded text-xs font-medium transition-all ${
-                    selectedStatus === s.status
-                      ? 'ring-2 ring-blue-500 ring-offset-1'
-                      : ''
-                  } ${getStatusColor(s.status)}`}
-                >
-                  {getStatusLabel(s.status)} <span className="font-bold">{s.count}</span>
-                </button>
-              ))}
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-xs text-gray-500">Status</div>
               {selectedStatus !== null && (
                 <button
                   onClick={() => handleStatusChange(selectedStatus)}
-                  className="px-2 py-1 rounded text-xs font-medium bg-gray-200 text-gray-600 hover:bg-gray-300"
+                  className="px-2 py-0.5 rounded text-xs font-medium bg-gray-200 text-gray-600 hover:bg-gray-300"
                 >
-                  Wyczysc
+                  Wyczysc filtr
                 </button>
               )}
+            </div>
+            <div className="space-y-2">
+              {categories.map((cat) => {
+                const categoryStatuses = groupedStatuses[cat.key] || [];
+                if (categoryStatuses.length === 0) return null;
+                const isExpanded = expandedCategories[cat.key];
+                const totalCount = getCategoryCount(cat.key);
+                return (
+                  <div key={cat.key}>
+                    <button
+                      onClick={() => toggleCategory(cat.key)}
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium ${cat.color} hover:opacity-80 transition-opacity`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <svg
+                          className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                        {cat.label}
+                      </span>
+                      <span className="font-bold">{totalCount}</span>
+                    </button>
+                    {isExpanded && (
+                      <div className="mt-2 ml-6 flex flex-wrap gap-2">
+                        {categoryStatuses.map((s) => (
+                          <button
+                            key={s.status}
+                            onClick={() => handleStatusChange(s.status)}
+                            className={`px-2 py-1 rounded text-xs font-medium transition-all ${
+                              selectedStatus === s.status
+                                ? 'ring-2 ring-blue-500 ring-offset-1'
+                                : ''
+                            } ${getStatusColor(s.status)}`}
+                          >
+                            {getStatusLabel(s.status)} <span className="font-bold">{s.count}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
