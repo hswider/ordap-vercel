@@ -287,8 +287,22 @@ export async function POST(request) {
       );
     }
 
-    // Check if user is asking about specific orders
-    const orderIds = extractOrderIds(message);
+    // Check if user is asking about specific orders - search in current message AND history
+    let orderIds = extractOrderIds(message);
+
+    // Also search for order IDs in conversation history
+    if (history && history.length > 0) {
+      for (const msg of history) {
+        if (msg.content) {
+          const historyIds = extractOrderIds(msg.content);
+          orderIds = orderIds.concat(historyIds);
+        }
+      }
+    }
+
+    // Remove duplicates from order IDs
+    orderIds = [...new Set(orderIds)];
+
     let orderData = [];
 
     if (orderIds.length > 0) {
