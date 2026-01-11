@@ -11,9 +11,6 @@ export async function GET(request) {
       return NextResponse.json({ error: 'No tokens' }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const checkPlatformId = searchParams.get('platformId');
-
     const headers = {
       'Authorization': `Bearer ${tokens.access_token}`,
       'Content-Type': 'application/json',
@@ -36,29 +33,40 @@ export async function GET(request) {
       });
     }
 
-    // Check specific platformId if requested
-    let specificPlatform = null;
-    if (checkPlatformId) {
-      specificPlatform = platformMap[checkPlatformId] || null;
-    }
-
-    // Get sample orders with different platforms
-    const ordersRes = await axios.get(`${baseUrl}/rest/api/orders/?limit=20`, { headers });
+    // Get orders sorted by newest first to find Amazon orders
+    const ordersRes = await axios.get(`${baseUrl}/rest/api/orders/?limit=50&sort=orderedAtDesc`, { headers });
     const orders = ordersRes.data?.orders || [];
 
-    const orderSamples = orders.slice(0, 5).map(o => ({
-      id: o.id,
-      platformAccountId: o.platformAccountId,
-      mappedTo: platformMap[o.platformAccountId] || { name: `Platform ${o.platformAccountId}`, platform: 'Unknown' }
-    }));
+    // Find orders with different platforms (especially Amazon)
+    const amazonOrders = orders.filter(o => o.platformAccountId >= 100).slice(0, 5);
+    const allegroOrders = orders.filter(o => o.platformAccountId < 100).slice(0, 3);
+
+    const debugOrders = [...amazonOrders, ...allegroOrders].map(o => {
+      const platformId = o.platformAccountId || o.platformId;
+      const platformInfo = platformMap[platformId];
+      return {
+        id: o.id,
+        platformAccountId: o.platformAccountId,
+        platformId: o.platformId,
+        platformIdType: typeof o.platformAccountId,
+        mapKeyExists: platformId in platformMap,
+        platformInfo: platformInfo || null,
+        mappedLabel: platformInfo?.name || `Platform ${platformId}`,
+        mappedPlatform: platformInfo?.platform || 'Unknown'
+      };
+    });
+
+    // Show available platform IDs >= 100 (Amazon range)
+    const amazonPlatforms = Object.entries(platformMap)
+      .filter(([id]) => parseInt(id) >= 100)
+      .slice(0, 10)
+      .reduce((acc, [id, val]) => { acc[id] = val; return acc; }, {});
 
     return NextResponse.json({
       totalPlatforms: Object.keys(platformMap).length,
-      platform121: platformMap[121] || 'NOT FOUND',
-      platform124: platformMap[124] || 'NOT FOUND',
-      platform127: platformMap[127] || 'NOT FOUND',
-      specificPlatform,
-      orderSamples
+      amazonPlatforms,
+      debugOrders,
+      rawPlatformMapSample: platformMapRes.data?.slice(0, 3)
     });
   } catch (error) {
     console.error('[Debug] Error:', error.response?.data || error.message);
