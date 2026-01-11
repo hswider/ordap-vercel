@@ -5,6 +5,42 @@ import OrderList from '@/components/OrderList';
 import Pagination from '@/components/Pagination';
 import SearchBox from '@/components/SearchBox';
 
+const statusMap = {
+  4: { label: 'Niepotw.', color: 'bg-gray-100 text-gray-800' },
+  1: { label: 'Nowy', color: 'bg-blue-100 text-blue-800' },
+  7: { label: 'Realizacja', color: 'bg-yellow-100 text-yellow-800' },
+  10: { label: 'Do wysyl.', color: 'bg-purple-100 text-purple-800' },
+  13: { label: 'Wyslane', color: 'bg-green-100 text-green-800' },
+  22: { label: 'PAL-NOWE', color: 'bg-blue-100 text-blue-800' },
+  113: { label: 'PAL-REAL', color: 'bg-yellow-100 text-yellow-800' },
+  166: { label: 'PILNE-PAL', color: 'bg-orange-100 text-orange-800' },
+  169: { label: 'B.PILNE-PAL', color: 'bg-red-100 text-red-800' },
+  25: { label: 'PIK-NOWE', color: 'bg-blue-100 text-blue-800' },
+  116: { label: 'PIK-REAL', color: 'bg-yellow-100 text-yellow-800' },
+  103: { label: 'PILNE-PIK', color: 'bg-orange-100 text-orange-800' },
+  106: { label: 'B.PILNE-PIK', color: 'bg-red-100 text-red-800' },
+  28: { label: 'LAW-NOWE', color: 'bg-blue-100 text-blue-800' },
+  119: { label: 'LAW-REAL', color: 'bg-yellow-100 text-yellow-800' },
+  172: { label: 'PILNE-LAW', color: 'bg-orange-100 text-orange-800' },
+  175: { label: 'B.PILNE-LAW', color: 'bg-red-100 text-red-800' },
+  199: { label: 'LSIEDZ-N', color: 'bg-blue-100 text-blue-800' },
+  205: { label: 'LSIEDZ-R', color: 'bg-yellow-100 text-yellow-800' },
+  178: { label: 'PILNE-LS', color: 'bg-orange-100 text-orange-800' },
+  181: { label: 'B.PILNE-LS', color: 'bg-red-100 text-red-800' },
+  31: { label: 'KIDS-NOWE', color: 'bg-blue-100 text-blue-800' },
+  122: { label: 'KIDS-REAL', color: 'bg-yellow-100 text-yellow-800' },
+  228: { label: 'PILNE-KIDS', color: 'bg-orange-100 text-orange-800' },
+  225: { label: 'B.PILNE-KIDS', color: 'bg-red-100 text-red-800' },
+  46: { label: 'LEG-NOWE', color: 'bg-blue-100 text-blue-800' },
+  131: { label: 'LEG-REAL', color: 'bg-yellow-100 text-yellow-800' },
+  184: { label: 'PILNE-LEG', color: 'bg-orange-100 text-orange-800' },
+  187: { label: 'B.PILNE-LEG', color: 'bg-red-100 text-red-800' },
+  57: { label: 'SARIS-N', color: 'bg-blue-100 text-blue-800' },
+  125: { label: 'SARIS-R', color: 'bg-yellow-100 text-yellow-800' },
+  220: { label: 'B.PILNE-SAR', color: 'bg-red-100 text-red-800' },
+  209: { label: 'SARIS', color: 'bg-gray-100 text-gray-800' }
+};
+
 export default function ZamowieniaPage() {
   const [orders, setOrders] = useState([]);
   const [pagination, setPagination] = useState(null);
@@ -15,24 +51,33 @@ export default function ZamowieniaPage() {
   const [perPage, setPerPage] = useState(20);
   const [channels, setChannels] = useState([]);
   const [selectedChannel, setSelectedChannel] = useState('');
+  const [statuses, setStatuses] = useState([]);
+  const [selectedStatus, setSelectedStatus] = useState(null);
 
-  // Fetch available channels
+  // Fetch available channels and statuses
   useEffect(() => {
-    async function loadChannels() {
+    async function loadFilters() {
       try {
-        const res = await fetch('/api/channels');
-        const data = await res.json();
-        if (data.channels) {
-          setChannels(data.channels);
+        const [channelsRes, statusesRes] = await Promise.all([
+          fetch('/api/channels'),
+          fetch('/api/statuses')
+        ]);
+        const channelsData = await channelsRes.json();
+        const statusesData = await statusesRes.json();
+        if (channelsData.channels) {
+          setChannels(channelsData.channels);
+        }
+        if (statusesData.statuses) {
+          setStatuses(statusesData.statuses);
         }
       } catch (err) {
-        console.error('Failed to load channels:', err);
+        console.error('Failed to load filters:', err);
       }
     }
-    loadChannels();
+    loadFilters();
   }, []);
 
-  const fetchOrders = useCallback(async (page = 1, search = '', itemsPerPage = 20, channel = '') => {
+  const fetchOrders = useCallback(async (page = 1, search = '', itemsPerPage = 20, channel = '', status = null) => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -46,6 +91,10 @@ export default function ZamowieniaPage() {
 
       if (channel) {
         params.append('channel', channel);
+      }
+
+      if (status !== null) {
+        params.append('status', status.toString());
       }
 
       const res = await fetch(`/api/orders?${params}`);
@@ -68,22 +117,28 @@ export default function ZamowieniaPage() {
 
   const handleSearch = (query) => {
     setSearchQuery(query);
-    fetchOrders(1, query, perPage, selectedChannel);
+    fetchOrders(1, query, perPage, selectedChannel, selectedStatus);
   };
 
   const handlePageChange = (newPage) => {
-    fetchOrders(newPage, searchQuery, perPage, selectedChannel);
+    fetchOrders(newPage, searchQuery, perPage, selectedChannel, selectedStatus);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handlePerPageChange = (newPerPage) => {
     setPerPage(newPerPage);
-    fetchOrders(1, searchQuery, newPerPage, selectedChannel);
+    fetchOrders(1, searchQuery, newPerPage, selectedChannel, selectedStatus);
   };
 
   const handleChannelChange = (channel) => {
     setSelectedChannel(channel);
-    fetchOrders(1, searchQuery, perPage, channel);
+    fetchOrders(1, searchQuery, perPage, channel, selectedStatus);
+  };
+
+  const handleStatusChange = (status) => {
+    const newStatus = status === selectedStatus ? null : status;
+    setSelectedStatus(newStatus);
+    fetchOrders(1, searchQuery, perPage, selectedChannel, newStatus);
   };
 
   const triggerSync = async () => {
@@ -95,7 +150,7 @@ export default function ZamowieniaPage() {
       if (data.error) {
         setError(data.error);
       } else {
-        await fetchOrders(1, searchQuery, perPage, selectedChannel);
+        await fetchOrders(1, searchQuery, perPage, selectedChannel, selectedStatus);
       }
     } catch (err) {
       setError('Synchronizacja nie powiodla sie');
@@ -105,8 +160,16 @@ export default function ZamowieniaPage() {
   };
 
   useEffect(() => {
-    fetchOrders(1, '', 20, '');
+    fetchOrders(1, '', 20, '', null);
   }, [fetchOrders]);
+
+  const getStatusLabel = (status) => {
+    return statusMap[status]?.label || `#${status}`;
+  };
+
+  const getStatusColor = (status) => {
+    return statusMap[status]?.color || 'bg-gray-100 text-gray-800';
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -130,6 +193,36 @@ export default function ZamowieniaPage() {
             {syncing ? 'Sync...' : 'Sync'}
           </button>
         </div>
+
+        {/* Status Filter */}
+        {statuses.length > 0 && (
+          <div className="mb-4 bg-white rounded-lg shadow p-3">
+            <div className="text-xs text-gray-500 mb-2">Status</div>
+            <div className="flex flex-wrap gap-2">
+              {statuses.map((s) => (
+                <button
+                  key={s.status}
+                  onClick={() => handleStatusChange(s.status)}
+                  className={`px-2 py-1 rounded text-xs font-medium transition-all ${
+                    selectedStatus === s.status
+                      ? 'ring-2 ring-blue-500 ring-offset-1'
+                      : ''
+                  } ${getStatusColor(s.status)}`}
+                >
+                  {getStatusLabel(s.status)} <span className="font-bold">{s.count}</span>
+                </button>
+              ))}
+              {selectedStatus !== null && (
+                <button
+                  onClick={() => handleStatusChange(selectedStatus)}
+                  className="px-2 py-1 rounded text-xs font-medium bg-gray-200 text-gray-600 hover:bg-gray-300"
+                >
+                  Wyczysc
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="mb-4 flex flex-col gap-3">
@@ -164,12 +257,16 @@ export default function ZamowieniaPage() {
               <option value={100}>100</option>
             </select>
             <span className="text-gray-600">na stronie</span>
-            {selectedChannel && (
+            {(selectedChannel || selectedStatus !== null) && (
               <button
-                onClick={() => handleChannelChange('')}
+                onClick={() => {
+                  setSelectedChannel('');
+                  setSelectedStatus(null);
+                  fetchOrders(1, searchQuery, perPage, '', null);
+                }}
                 className="ml-2 px-2 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-xs"
               >
-                Wyczysc filtr
+                Wyczysc filtry
               </button>
             )}
           </div>
