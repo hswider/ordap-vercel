@@ -84,14 +84,14 @@ export async function GET() {
       GROUP BY currency
     `;
 
-    // Revenue last 7 days by day
-    const revenueLast7Days = await sql`
+    // Revenue last 30 days by day
+    const revenueLast30Days = await sql`
       SELECT
         DATE(ordered_at) as date,
         currency,
         SUM(total_gross) as total
       FROM orders
-      WHERE ordered_at >= CURRENT_DATE - INTERVAL '7 days'
+      WHERE ordered_at >= CURRENT_DATE - INTERVAL '30 days'
       GROUP BY DATE(ordered_at), currency
       ORDER BY date ASC
     `;
@@ -109,7 +109,7 @@ export async function GET() {
 
     // Build daily revenue chart data
     const dailyRevenueMap = {};
-    revenueLast7Days.rows.forEach(r => {
+    revenueLast30Days.rows.forEach(r => {
       const dateStr = new Date(r.date).toISOString().split('T')[0];
       if (!dailyRevenueMap[dateStr]) {
         dailyRevenueMap[dateStr] = 0;
@@ -117,16 +117,16 @@ export async function GET() {
       dailyRevenueMap[dateStr] += convertToPln(r.total, r.currency);
     });
 
-    // Create array for last 7 days
-    const last7DaysRevenue = [];
-    for (let i = 6; i >= 0; i--) {
+    // Create array for last 30 days
+    const last30DaysRevenue = [];
+    for (let i = 29; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
-      const dayName = date.toLocaleDateString('pl-PL', { weekday: 'short' });
-      last7DaysRevenue.push({
+      const dayLabel = date.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit' });
+      last30DaysRevenue.push({
         date: dateStr,
-        day: dayName,
+        day: dayLabel,
         revenue: Math.round(dailyRevenueMap[dateStr] || 0)
       });
     }
@@ -150,7 +150,7 @@ export async function GET() {
       revenue: {
         todayPln: Math.round(revenueTodayPln),
         last30DaysPln: Math.round(revenue30DaysPln),
-        last7Days: last7DaysRevenue
+        last30Days: last30DaysRevenue
       }
     });
   } catch (error) {

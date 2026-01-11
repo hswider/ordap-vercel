@@ -175,27 +175,29 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Revenue Chart - Last 7 Days */}
+            {/* Revenue Chart - Last 30 Days */}
             <div className="bg-white rounded-lg shadow">
               <div className="px-4 py-3 border-b border-gray-100">
-                <h2 className="font-semibold text-gray-900">Sprzedaż ostatnie 7 dni (PLN)</h2>
+                <h2 className="font-semibold text-gray-900">Sprzedaż ostatnie 30 dni (PLN)</h2>
               </div>
               <div className="p-4">
-                <div className="h-48 sm:h-56">
+                <div className="h-48 sm:h-64">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={stats?.revenue?.last7Days || []}>
+                    <BarChart data={stats?.revenue?.last30Days || []}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
                       <XAxis
                         dataKey="day"
-                        tick={{ fontSize: 12 }}
+                        tick={{ fontSize: 10 }}
                         tickLine={false}
                         axisLine={false}
+                        interval={2}
                       />
                       <YAxis
-                        tick={{ fontSize: 12 }}
+                        tick={{ fontSize: 10 }}
                         tickLine={false}
                         axisLine={false}
-                        tickFormatter={(value) => `${value} zł`}
+                        tickFormatter={(value) => `${(value/1000).toFixed(0)}k`}
+                        width={40}
                       />
                       <Tooltip
                         formatter={(value) => [`${value.toLocaleString('pl-PL')} zł`, 'Sprzedaż']}
@@ -205,7 +207,7 @@ export default function Home() {
                       <Bar
                         dataKey="revenue"
                         fill="#3B82F6"
-                        radius={[4, 4, 0, 0]}
+                        radius={[2, 2, 0, 0]}
                       />
                     </BarChart>
                   </ResponsiveContainer>
