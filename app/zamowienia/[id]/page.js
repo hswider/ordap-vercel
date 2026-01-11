@@ -90,8 +90,18 @@ export default function OrderDetailsPage() {
     );
   };
 
-  const AddressCard = ({ title, address }) => {
-    if (!address) return null;
+  const AddressCard = ({ title, address, fallbackText }) => {
+    if (!address && !fallbackText) return null;
+
+    if (!address || (!address.name && !address.street)) {
+      return (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
+          <p className="text-gray-500">{fallbackText || 'Brak danych'}</p>
+        </div>
+      );
+    }
+
     return (
       <div className="bg-white rounded-lg shadow p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
@@ -234,9 +244,9 @@ export default function OrderDetailsPage() {
 
         {/* Addresses */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <AddressCard title="Dane zamawiajacego" address={order.customer} />
-          <AddressCard title="Dane wysylki" address={order.shipping} />
-          <AddressCard title="Dane do faktury" address={order.invoice || order.shipping} />
+          <AddressCard title="Dane zamawiajacego" address={order.customer} fallbackText="Dane zaszyfrowane przez platforme" />
+          <AddressCard title="Dane wysylki" address={order.shipping} fallbackText="Wysylka: 0.00 (dane zaszyfrowane)" />
+          <AddressCard title="Dane do faktury" address={order.invoice || order.shipping} fallbackText="Brak danych do faktury" />
         </div>
 
         {/* Notes */}
