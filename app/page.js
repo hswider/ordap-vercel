@@ -167,18 +167,18 @@ export default function Home() {
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow p-4 text-white">
                 <p className="text-xs text-green-100">Obrót dzisiaj</p>
-                <p className="text-2xl font-bold">{stats?.revenue?.todayEur?.toLocaleString('pl-PL') || 0} €</p>
+                <p className="text-2xl font-bold">{stats?.revenue?.todayPln?.toLocaleString('pl-PL') || 0} zł</p>
               </div>
               <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow p-4 text-white">
                 <p className="text-xs text-blue-100">Obrót 30 dni</p>
-                <p className="text-2xl font-bold">{stats?.revenue?.last30DaysEur?.toLocaleString('pl-PL') || 0} €</p>
+                <p className="text-2xl font-bold">{stats?.revenue?.last30DaysPln?.toLocaleString('pl-PL') || 0} zł</p>
               </div>
             </div>
 
             {/* Revenue Chart - Last 7 Days */}
             <div className="bg-white rounded-lg shadow">
               <div className="px-4 py-3 border-b border-gray-100">
-                <h2 className="font-semibold text-gray-900">Sprzedaż ostatnie 7 dni (EUR)</h2>
+                <h2 className="font-semibold text-gray-900">Sprzedaż ostatnie 7 dni (PLN)</h2>
               </div>
               <div className="p-4">
                 <div className="h-48 sm:h-56">
@@ -195,10 +195,10 @@ export default function Home() {
                         tick={{ fontSize: 12 }}
                         tickLine={false}
                         axisLine={false}
-                        tickFormatter={(value) => `${value}€`}
+                        tickFormatter={(value) => `${value} zł`}
                       />
                       <Tooltip
-                        formatter={(value) => [`${value.toLocaleString('pl-PL')} €`, 'Sprzedaż']}
+                        formatter={(value) => [`${value.toLocaleString('pl-PL')} zł`, 'Sprzedaż']}
                         labelFormatter={(label) => label}
                         contentStyle={{ fontSize: '12px' }}
                       />

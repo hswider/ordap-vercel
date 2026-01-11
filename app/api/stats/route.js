@@ -2,15 +2,15 @@ import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
 import { initDatabase } from '@/lib/db';
 
-// Kurs wymiany PLN -> EUR (przybliżony)
-const PLN_TO_EUR = 0.23;
+// Kurs wymiany EUR -> PLN (przybliżony)
+const EUR_TO_PLN = 4.35;
 
-function convertToEur(amount, currency) {
+function convertToPln(amount, currency) {
   if (!amount) return 0;
-  if (currency === 'EUR') return parseFloat(amount);
-  if (currency === 'PLN') return parseFloat(amount) * PLN_TO_EUR;
-  // Dla innych walut zakładamy EUR
-  return parseFloat(amount);
+  if (currency === 'PLN') return parseFloat(amount);
+  if (currency === 'EUR') return parseFloat(amount) * EUR_TO_PLN;
+  // Dla innych walut zakładamy EUR i przeliczamy na PLN
+  return parseFloat(amount) * EUR_TO_PLN;
 }
 
 export async function GET() {
@@ -96,15 +96,15 @@ export async function GET() {
       ORDER BY date ASC
     `;
 
-    // Calculate revenue in EUR
-    let revenueTodayEur = 0;
+    // Calculate revenue in PLN
+    let revenueTodayPln = 0;
     revenueToday.rows.forEach(r => {
-      revenueTodayEur += convertToEur(r.total, r.currency);
+      revenueTodayPln += convertToPln(r.total, r.currency);
     });
 
-    let revenue30DaysEur = 0;
+    let revenue30DaysPln = 0;
     revenue30Days.rows.forEach(r => {
-      revenue30DaysEur += convertToEur(r.total, r.currency);
+      revenue30DaysPln += convertToPln(r.total, r.currency);
     });
 
     // Build daily revenue chart data
@@ -114,7 +114,7 @@ export async function GET() {
       if (!dailyRevenueMap[dateStr]) {
         dailyRevenueMap[dateStr] = 0;
       }
-      dailyRevenueMap[dateStr] += convertToEur(r.total, r.currency);
+      dailyRevenueMap[dateStr] += convertToPln(r.total, r.currency);
     });
 
     // Create array for last 7 days
@@ -148,8 +148,8 @@ export async function GET() {
         totalOrders: parseInt(totalOrders.rows[0].count)
       },
       revenue: {
-        todayEur: Math.round(revenueTodayEur),
-        last30DaysEur: Math.round(revenue30DaysEur),
+        todayPln: Math.round(revenueTodayPln),
+        last30DaysPln: Math.round(revenue30DaysPln),
         last7Days: last7DaysRevenue
       }
     });
