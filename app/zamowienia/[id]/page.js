@@ -98,15 +98,17 @@ export default function OrderDetailsPage() {
       209: { label: 'SARIS GARAGE', color: 'bg-gray-100 text-gray-800' }
     };
     const s = statusMap[status] || { label: `Status ${status}`, color: 'bg-gray-100 text-gray-800' };
-    return <span className={`px-3 py-1 rounded-full text-sm font-medium ${s.color}`}>{s.label}</span>;
+    return <span className={`px-2 py-1 rounded-full text-xs font-medium ${s.color}`}>{s.label}</span>;
   };
 
   const renderPlatformIcon = (platform) => {
     const platformIcons = {
-      'Amazon': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQoIwGv61BBxMlFDmBHeDvMo8-5HNlM4_8Skw&s',
+      'Amazon': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Amazon_icon.svg/250px-Amazon_icon.svg.png',
       'Allegro': 'https://a.allegroimg.com/original/12c30c/0d4b068640de9b0daf22af9d97c5',
-      'Shopify': 'https://images.icon-icons.com/836/PNG/512/Shopify_icon-icons.com_66757.png',
-      'Kaufland': 'https://logotypy.net/wp-content/uploads/2023/09/logo-kaufland.jpg'
+      'Shopify': 'https://e7.pngegg.com/pngimages/193/871/png-clipart-green-shopping-bag-illustration-shopify-logo-icons-logos-emojis-tech-companies-thumbnail.png',
+      'Kaufland': 'https://upload.wikimedia.org/wikipedia/commons/6/65/Kaufland_Deutschland.png',
+      'Ebay': 'https://static.vecteezy.com/system/resources/previews/020/190/417/non_2x/ebay-logo-ebay-icon-free-free-vector.jpg',
+      'eBay': 'https://static.vecteezy.com/system/resources/previews/020/190/417/non_2x/ebay-logo-ebay-icon-free-free-vector.jpg',
     };
 
     if (platformIcons[platform]) {
@@ -114,12 +116,12 @@ export default function OrderDetailsPage() {
         <img
           src={platformIcons[platform]}
           alt={platform}
-          className="w-12 h-12 rounded-full object-cover"
+          className="w-10 h-10 rounded-full object-cover"
         />
       );
     }
     return (
-      <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+      <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
         {platform?.charAt(0) || '?'}
       </div>
     );
@@ -130,25 +132,25 @@ export default function OrderDetailsPage() {
 
     if (!address || (!address.name && !address.street)) {
       return (
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
-          <p className="text-gray-500">{fallbackText || 'Brak danych'}</p>
+        <div className="bg-white rounded-lg shadow p-4">
+          <h3 className="text-sm font-semibold text-gray-900 mb-2">{title}</h3>
+          <p className="text-xs text-gray-500">{fallbackText || 'Brak danych'}</p>
         </div>
       );
     }
 
     return (
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
-        <div className="space-y-2 text-gray-700">
+      <div className="bg-white rounded-lg shadow p-4">
+        <h3 className="text-sm font-semibold text-gray-900 mb-2">{title}</h3>
+        <div className="space-y-1 text-xs text-gray-700">
           <p className="font-medium">{address.name}</p>
-          {address.companyName && <p className="text-sm">{address.companyName}</p>}
-          {address.companyTaxNumber && <p className="text-sm">NIP: {address.companyTaxNumber}</p>}
+          {address.companyName && <p>{address.companyName}</p>}
+          {address.companyTaxNumber && <p>NIP: {address.companyTaxNumber}</p>}
           <p>{address.street} {address.streetNumber}</p>
           <p>{address.zipCode} {address.city}</p>
-          <p>{address.country}</p>
-          {address.phone && <p className="mt-2">{address.phone}</p>}
-          {address.email && <p className="text-sm text-blue-600">{address.email}</p>}
+          {address.country && <p>{address.country}</p>}
+          {address.phone && <p className="mt-1">{address.phone}</p>}
+          {address.email && <p className="text-blue-600 break-all">{address.email}</p>}
         </div>
       </div>
     );
@@ -164,12 +166,12 @@ export default function OrderDetailsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-100 p-8">
-        <div className="max-w-4xl mx-auto">
-          <Link href="/zamowienia" className="text-blue-600 hover:underline mb-4 inline-block">
-            &larr; Powrot do zamowien
+      <div className="min-h-screen bg-gray-100 p-4">
+        <div className="max-w-3xl mx-auto">
+          <Link href="/zamowienia" className="text-blue-600 hover:underline mb-4 inline-block text-sm">
+            &larr; Powrot
           </Link>
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm">
             {error}
           </div>
         </div>
@@ -181,127 +183,114 @@ export default function OrderDetailsPage() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <main className="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <main className="max-w-3xl mx-auto px-3 py-4 sm:px-6 sm:py-6">
         {/* Back Link */}
-        <Link href="/zamowienia" className="text-blue-600 hover:underline mb-6 inline-block">
-          &larr; Powrot do zamowien
+        <Link href="/zamowienia" className="text-blue-600 hover:underline mb-4 inline-block text-sm">
+          &larr; Powrot
         </Link>
 
         {/* Header */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-4">
-              {renderPlatformIcon(order.channel?.platform)}
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  Zamowienie {order.id}
-                </h1>
-                <p className="text-gray-600">{order.channel?.label}</p>
+        <div className="bg-white rounded-lg shadow p-4 mb-4">
+          <div className="flex items-start gap-3">
+            {renderPlatformIcon(order.channel?.platform)}
+            <div className="flex-grow min-w-0">
+              <h1 className="text-lg font-bold text-gray-900 truncate">
+                #{order.id}
+              </h1>
+              <p className="text-xs text-gray-600 truncate">{order.channel?.label}</p>
+            </div>
+            <div className="text-right flex-shrink-0">
+              <div className="text-lg font-bold text-gray-900">
+                {formatPrice(order.financials?.totalGross, order.financials?.currency)}
+              </div>
+              <div className="text-xs text-gray-500">
+                {formatDate(order.dates?.orderedAt)}
               </div>
             </div>
-            <div className="text-right">
-              {getStatusBadge(order.status?.deliveryStatus)}
-              <div className="mt-2">
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  order.status?.paymentStatus === 'PAID'
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {order.status?.paymentStatus === 'PAID' ? 'Oplacone' : 'Nieoplacone'}
-                </span>
-              </div>
-            </div>
+          </div>
+          {/* Status badges */}
+          <div className="mt-3 flex flex-wrap gap-2">
+            {getStatusBadge(order.status?.deliveryStatus)}
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+              order.status?.paymentStatus === 'PAID'
+                ? 'bg-green-100 text-green-800'
+                : 'bg-red-100 text-red-800'
+            }`}>
+              {order.status?.paymentStatus === 'PAID' ? 'Oplacone' : 'Nieoplacone'}
+            </span>
+            {(order.dates?.sendDateMin || order.dates?.sendDateMax) && (
+              <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                Wys: {order.dates?.sendDateMax ? formatDate(order.dates.sendDateMax).split(',')[0] : formatDate(order.dates.sendDateMin).split(',')[0]}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Quick Info Cards */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="bg-white rounded-lg shadow p-3">
+            <p className="text-xs text-gray-500">Netto</p>
+            <p className="font-semibold">{formatPrice(order.financials?.totalNet, order.financials?.currency)}</p>
+          </div>
+          <div className="bg-white rounded-lg shadow p-3">
+            <p className="text-xs text-gray-500">Zaplacono</p>
+            <p className="font-semibold text-green-600">{formatPrice(order.financials?.paidAmount, order.financials?.currency)}</p>
           </div>
         </div>
 
         {/* Order Details */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* Left Column - Order Info */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Szczegoly zamowienia</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Numer zamowienia:</span>
-                <span className="font-medium">{order.id}</span>
-              </div>
-              {order.externalId && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Numer zewnetrzny:</span>
-                  <span className="font-medium">{order.externalId}</span>
-                </div>
-              )}
-              <div className="flex justify-between">
-                <span className="text-gray-600">Data zamowienia:</span>
-                <span className="font-medium">{formatDate(order.dates?.orderedAt)}</span>
-              </div>
-              {(order.dates?.sendDateMin || order.dates?.sendDateMax) && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Data wysylki:</span>
-                  <span className="font-medium">
-                    {order.dates?.sendDateMin ? formatDate(order.dates.sendDateMin).split(',')[0] : ''}
-                    {order.dates?.sendDateMin && order.dates?.sendDateMax ? ' - ' : ''}
-                    {order.dates?.sendDateMax ? formatDate(order.dates.sendDateMax).split(',')[0] : ''}
-                  </span>
-                </div>
-              )}
-              <div className="flex justify-between">
-                <span className="text-gray-600">Kanal sprzedazy:</span>
-                <span className="font-medium">{order.channel?.label}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Platforma:</span>
-                <span className="font-medium">{order.channel?.platform}</span>
-              </div>
+        <div className="bg-white rounded-lg shadow p-4 mb-4">
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">Szczegoly</h3>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-500">Nr zamowienia</span>
+              <span className="font-medium">{order.id}</span>
             </div>
-          </div>
-
-          {/* Right Column - Payments */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Platnosci i wysylka</h3>
-            <div className="space-y-3">
+            {order.externalId && (
               <div className="flex justify-between">
-                <span className="text-gray-600">Wartosc netto:</span>
-                <span className="font-medium">{formatPrice(order.financials?.totalNet, order.financials?.currency)}</span>
+                <span className="text-gray-500">Nr zewnetrzny</span>
+                <span className="font-medium text-xs">{order.externalId}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Wartosc brutto:</span>
-                <span className="font-bold text-lg">{formatPrice(order.financials?.totalGross, order.financials?.currency)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Zaplacono:</span>
-                <span className="font-medium text-green-600">{formatPrice(order.financials?.paidAmount, order.financials?.currency)}</span>
-              </div>
-
-              {order.payments && order.payments.length > 0 && (
-                <div className="mt-4 pt-4 border-t">
-                  <p className="text-sm text-gray-600 mb-2">Historia platnosci:</p>
-                  {order.payments.map((payment, idx) => (
-                    <div key={idx} className="text-sm flex justify-between py-1">
-                      <span>{formatDate(payment.date)} - {payment.type}</span>
-                      <span className="font-medium">{formatPrice(payment.amount, payment.currency)}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
+            )}
+            <div className="flex justify-between">
+              <span className="text-gray-500">Kanal</span>
+              <span className="font-medium text-xs truncate ml-2">{order.channel?.label}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">Platforma</span>
+              <span className="font-medium">{order.channel?.platform}</span>
             </div>
           </div>
         </div>
 
         {/* Addresses */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <AddressCard title="Dane zamawiajacego" address={order.customer} fallbackText="Dane zaszyfrowane przez platforme" />
-          <AddressCard title="Dane wysylki" address={order.shipping} fallbackText="Wysylka: 0.00 (dane zaszyfrowane)" />
-          <AddressCard title="Dane do faktury" address={order.invoice || order.shipping} fallbackText="Brak danych do faktury" />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+          <AddressCard title="Zamawiajacy" address={order.customer} fallbackText="Dane zaszyfrowane" />
+          <AddressCard title="Wysylka" address={order.shipping} fallbackText="Dane zaszyfrowane" />
+          <AddressCard title="Faktura" address={order.invoice || order.shipping} fallbackText="Brak danych" />
         </div>
 
         {/* Notes */}
         {order.notes && order.notes.length > 0 && (
-          <div className="bg-yellow-50 rounded-lg shadow p-6 mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Uwagi do zamowienia</h3>
+          <div className="bg-yellow-50 rounded-lg shadow p-4 mb-4">
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">Uwagi</h3>
             {order.notes.map((note, idx) => (
-              <div key={idx} className="text-gray-700">
+              <div key={idx} className="text-xs text-gray-700">
                 <p>{note.comment}</p>
-                <p className="text-sm text-gray-500 mt-1">{formatDate(note.createdAt)}</p>
+                <p className="text-gray-500 mt-1">{formatDate(note.createdAt)}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Payments */}
+        {order.payments && order.payments.length > 0 && (
+          <div className="bg-white rounded-lg shadow p-4 mb-4">
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">Historia platnosci</h3>
+            {order.payments.map((payment, idx) => (
+              <div key={idx} className="text-xs flex justify-between py-1 border-b border-gray-50 last:border-0">
+                <span className="text-gray-600">{formatDate(payment.date)}</span>
+                <span className="font-medium">{formatPrice(payment.amount, payment.currency)}</span>
               </div>
             ))}
           </div>
@@ -309,80 +298,71 @@ export default function OrderDetailsPage() {
 
         {/* Order Items */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 bg-gray-50 border-b">
-            <h3 className="text-lg font-semibold text-gray-900">Produkty</h3>
+          <div className="px-4 py-3 bg-gray-50 border-b">
+            <h3 className="text-sm font-semibold text-gray-900">Produkty ({order.items?.length || 0})</h3>
           </div>
           <div className="divide-y divide-gray-100">
             {order.items?.map((item, index) => (
               <div
                 key={index}
-                className={`px-6 py-4 flex items-center gap-4 ${item.isShipping ? 'bg-gray-50' : ''}`}
+                className={`p-3 ${item.isShipping ? 'bg-gray-50' : ''}`}
               >
-                {/* Image */}
-                <div className="w-16 h-16 flex-shrink-0">
-                  {item.isShipping ? (
-                    <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center">
-                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                      </svg>
-                    </div>
-                  ) : item.image ? (
-                    <Image
-                      src={item.image}
-                      alt={item.name}
-                      width={64}
-                      height={64}
-                      className="object-cover rounded"
-                      unoptimized
-                    />
-                  ) : (
-                    <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center text-gray-400">
-                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-
-                {/* Details */}
-                <div className="flex-grow">
-                  <div className="font-medium text-gray-900">
-                    {item.isShipping && <span className="text-gray-500 mr-2">[Wysylka]</span>}
-                    {item.name}
+                <div className="flex gap-3">
+                  {/* Image */}
+                  <div className="w-12 h-12 flex-shrink-0">
+                    {item.isShipping ? (
+                      <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
+                        <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                        </svg>
+                      </div>
+                    ) : item.image ? (
+                      <Image
+                        src={item.image}
+                        alt={item.name}
+                        width={48}
+                        height={48}
+                        className="object-cover rounded"
+                        unoptimized
+                      />
+                    ) : (
+                      <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center text-gray-400">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                    )}
                   </div>
-                  {item.sku && <div className="text-sm text-gray-500">SKU: {item.sku}</div>}
-                  {item.ean && <div className="text-sm text-gray-500">EAN: {item.ean}</div>}
+
+                  {/* Details */}
+                  <div className="flex-grow min-w-0">
+                    <div className="text-sm font-medium text-gray-900 line-clamp-2">
+                      {item.isShipping && <span className="text-gray-500">[Wysylka] </span>}
+                      {item.name}
+                    </div>
+                    {item.sku && <div className="text-xs text-gray-500">SKU: {item.sku}</div>}
+                  </div>
                 </div>
 
-                {/* Quantity */}
-                <div className="text-center px-4">
-                  <div className="text-sm text-gray-500">Ilosc</div>
-                  <div className="font-medium">{item.quantity}</div>
-                </div>
-
-                {/* Price */}
-                <div className="text-center px-4">
-                  <div className="text-sm text-gray-500">Cena</div>
-                  <div className="font-medium">{formatPrice(item.priceGross, order.financials?.currency)}</div>
-                </div>
-
-                {/* Total */}
-                <div className="text-right px-4 min-w-[100px]">
-                  <div className="text-sm text-gray-500">Suma</div>
-                  <div className="font-bold">{formatPrice(item.totalGross, order.financials?.currency)}</div>
+                {/* Price row */}
+                <div className="mt-2 flex justify-between items-center text-sm">
+                  <div className="text-gray-500">
+                    {item.quantity} x {formatPrice(item.priceGross, order.financials?.currency)}
+                  </div>
+                  <div className="font-bold">
+                    {formatPrice(item.totalGross, order.financials?.currency)}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
 
           {/* Total */}
-          <div className="px-6 py-4 bg-gray-50 border-t flex justify-end">
-            <div className="text-right">
-              <div className="text-sm text-gray-500">Razem</div>
-              <div className="text-2xl font-bold text-gray-900">
-                {formatPrice(order.financials?.totalGross, order.financials?.currency)}
-              </div>
-            </div>
+          <div className="px-4 py-3 bg-gray-50 border-t flex justify-between items-center">
+            <span className="text-sm font-medium text-gray-700">Razem</span>
+            <span className="text-xl font-bold text-gray-900">
+              {formatPrice(order.financials?.totalGross, order.financials?.currency)}
+            </span>
           </div>
         </div>
       </main>
