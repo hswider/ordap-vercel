@@ -211,6 +211,27 @@ export default function ZamowieniaPage() {
     return statusMap[status]?.color || 'bg-gray-100 text-gray-800';
   };
 
+  // Sortowanie statusów po kolorach: niebieski, żółty, pomarańczowy, czerwony, zielony, szary, fioletowy
+  const getColorOrder = (color) => {
+    if (color.includes('blue')) return 1;
+    if (color.includes('yellow')) return 2;
+    if (color.includes('orange')) return 3;
+    if (color.includes('red')) return 4;
+    if (color.includes('green')) return 5;
+    if (color.includes('gray')) return 6;
+    if (color.includes('purple')) return 7;
+    return 8;
+  };
+
+  const sortedStatuses = [...statuses].sort((a, b) => {
+    const colorA = getStatusColor(a.status);
+    const colorB = getStatusColor(b.status);
+    const orderA = getColorOrder(colorA);
+    const orderB = getColorOrder(colorB);
+    if (orderA !== orderB) return orderA - orderB;
+    return b.count - a.count; // W ramach tego samego koloru sortuj po liczbie zamówień
+  });
+
   return (
     <div className="min-h-screen bg-gray-100">
       <main className="max-w-3xl mx-auto px-3 py-4 sm:px-6 sm:py-6">
@@ -235,11 +256,11 @@ export default function ZamowieniaPage() {
         </div>
 
         {/* Status Filter */}
-        {statuses.length > 0 && (
+        {sortedStatuses.length > 0 && (
           <div className="mb-4 bg-white rounded-lg shadow p-3">
             <div className="text-xs text-gray-500 mb-2">Status</div>
             <div className="flex flex-wrap gap-2">
-              {statuses.map((s) => (
+              {sortedStatuses.map((s) => (
                 <button
                   key={s.status}
                   onClick={() => handleStatusChange(s.status)}
