@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
+import { sql } from '@vercel/postgres';
 import { initDatabase, getOrderById, getTokens } from '@/lib/db';
 
 // Fetch single order from Apilo API with full details
@@ -56,7 +57,9 @@ async function fetchOrderFromApilo(orderId, accessToken) {
       payments,
       notes,
       totalNet: parseFloat(order.originalAmountTotalWithoutTax) || 0,
-      paidAmount: parseFloat(order.originalAmountTotalPaid) || 0
+      paidAmount: parseFloat(order.originalAmountTotalPaid) || 0,
+      sendDateMin: order.sendDateMin || null,
+      sendDateMax: order.sendDateMax || null
     };
   } catch (error) {
     console.error('[API] Error fetching from Apilo:', error.message);
@@ -78,8 +81,11 @@ export async function GET(request, { params }) {
       );
     }
 
-    // If shipping data is missing, fetch from Apilo API
-    if (!order.shipping || !order.payments || order.payments.length === 0) {
+    // If shipping data or send dates are missing, fetch from Apilo API
+    const needsFetch = !order.shipping || !order.payments || order.payments.length === 0 ||
+                       (!order.dates?.sendDateMin && !order.dates?.sendDateMax);
+
+    if (needsFetch) {
       const tokens = await getTokens();
       if (tokens?.access_token) {
         const apiloData = await fetchOrderFromApilo(id, tokens.access_token);
@@ -92,6 +98,25 @@ export async function GET(request, { params }) {
           order.notes = apiloData.notes;
           order.financials.totalNet = apiloData.totalNet || order.financials.totalNet;
           order.financials.paidAmount = apiloData.paidAmount || order.financials.paidAmount;
+
+          // Add send dates to order
+          if (!order.dates) order.dates = {};
+          order.dates.sendDateMin = apiloData.sendDateMin;
+          order.dates.sendDateMax = apiloData.sendDateMax;
+
+          // Save send dates to database for future requests
+          if (apiloData.sendDateMin || apiloData.sendDateMax) {
+            try {
+              await sql`
+                UPDATE orders
+                SET send_date_min = ${apiloData.sendDateMin ? new Date(apiloData.sendDateMin) : null},
+                    send_date_max = ${apiloData.sendDateMax ? new Date(apiloData.sendDateMax) : null}
+                WHERE id = ${id}
+              `;
+            } catch (e) {
+              console.error('[API] Failed to save send dates:', e.message);
+            }
+          }
         }
       }
     }
