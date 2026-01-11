@@ -9,13 +9,70 @@ import {
   getStatsByPlatformLast7Days,
   getDailyStatsLast14Days,
   getTopProductsLast30Days,
-  getOverallStats
+  getOverallStats,
+  searchOrderForAgent
 } from '@/lib/db';
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
 // Currency conversion
 const EUR_TO_PLN = 4.35;
+
+// Extract potential order IDs from message
+function extractOrderIds(message) {
+  // Match patterns like: AM260101910, 12345678, #12345, order numbers
+  const patterns = [
+    /[A-Z]{2}\d{6,}/gi,  // AM260101910
+    /\b\d{7,}\b/g,        // 12345678
+    /#(\d{4,})/g,         // #12345
+  ];
+
+  const ids = new Set();
+  for (const pattern of patterns) {
+    const matches = message.match(pattern);
+    if (matches) {
+      matches.forEach(m => ids.add(m.replace('#', '')));
+    }
+  }
+
+  return Array.from(ids);
+}
+
+// Format order for AI context
+function formatOrderForAI(order) {
+  const items = order.items
+    .filter(item => !item.isShipping)
+    .map(item => `  - ${item.name} (SKU: ${item.sku || 'brak'}) x${item.quantity} = ${item.totalGross?.toFixed(2) || item.priceGross?.toFixed(2)} ${order.currency}`)
+    .join('\n');
+
+  const customer = order.customer || {};
+  const shipping = order.shipping || {};
+
+  return `
+ZAMÓWIENIE ${order.externalId || order.id}:
+- ID wewnętrzne: ${order.id}
+- Platforma: ${order.channel} (${order.channelLabel})
+- Data: ${order.orderedAt ? new Date(order.orderedAt).toLocaleString('pl-PL') : 'brak'}
+- Status płatności: ${order.paymentStatus}
+- Status dostawy: ${order.deliveryStatus}
+- Wartość: ${order.totalGross?.toFixed(2)} ${order.currency}
+
+KLIENT:
+- Imię i nazwisko: ${customer.name || 'brak'}
+- Email: ${customer.email || 'brak'}
+- Telefon: ${customer.phone || 'brak'}
+- Firma: ${customer.companyName || 'brak'}
+
+ADRES DOSTAWY:
+- ${shipping.name || customer.name || 'brak'}
+- ${shipping.street || ''} ${shipping.streetNumber || ''}
+- ${shipping.zipCode || ''} ${shipping.city || ''}
+- ${shipping.country || ''}
+
+PRODUKTY:
+${items || '  Brak produktów'}
+`;
+}
 
 // Gather context data for AI using PostgreSQL CURRENT_DATE for consistency
 async function gatherContextData() {
@@ -106,18 +163,24 @@ async function gatherContextData() {
 }
 
 // Call Groq API (free and fast)
-async function callGroq(message, contextData) {
+async function callGroq(message, contextData, orderData = []) {
   if (!GROQ_API_KEY) {
     throw new Error('GROQ_API_KEY nie jest skonfigurowany. Dodaj go do zmiennych środowiskowych w Vercel.');
   }
+
+  // Format order data if present
+  const orderContext = orderData.length > 0
+    ? '\n\n=== ZNALEZIONE ZAMÓWIENIA ===\n' + orderData.map(o => formatOrderForAI(o)).join('\n---\n')
+    : '';
 
   const systemPrompt = `Jesteś asystentem AI dla systemu zarządzania zamówieniami POOM. Odpowiadasz po polsku na pytania dotyczące sprzedaży, zamówień i statystyk.
 
 WAŻNE ZASADY:
 - Odpowiadaj krótko i konkretnie
-- Wszystkie kwoty są już przeliczone na PLN
+- Wszystkie kwoty statystyk są już przeliczone na PLN
 - Używaj polskiego formatowania walut (np. "1 234,56 PLN")
 - Formatuj liczby z separatorami tysięcy (spacja jako separator)
+- Jeśli użytkownik pyta o konkretne zamówienie, szukaj go w sekcji "ZNALEZIONE ZAMÓWIENIA"
 - Jeśli nie masz danych na dane pytanie, powiedz o tym wprost
 
 AKTUALNE DANE (stan na ${contextData?.currentDate || 'teraz'}):
@@ -157,7 +220,7 @@ ${contextData?.topProducts?.map((p, i) => `${i+1}. ${p.name} (${p.sku || 'brak S
 OGÓLNE STATYSTYKI:
 - Wszystkie zamówienia w bazie: ${contextData?.overall?.totalOrders || 0}
 - Anulowane: ${contextData?.overall?.canceledOrders || 0}
-- Liczba platform: ${contextData?.overall?.platformCount || 0}`;
+- Liczba platform: ${contextData?.overall?.platformCount || 0}${orderContext}`;
 
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
@@ -208,8 +271,28 @@ export async function POST(request) {
       );
     }
 
+    // Check if user is asking about specific orders
+    const orderIds = extractOrderIds(message);
+    let orderData = [];
+
+    if (orderIds.length > 0) {
+      console.log('[Agent] Searching for orders:', orderIds);
+      for (const orderId of orderIds) {
+        const orders = await searchOrderForAgent(orderId);
+        orderData = orderData.concat(orders);
+      }
+      // Remove duplicates
+      const seen = new Set();
+      orderData = orderData.filter(o => {
+        if (seen.has(o.id)) return false;
+        seen.add(o.id);
+        return true;
+      });
+      console.log('[Agent] Found orders:', orderData.length);
+    }
+
     // Call Groq (free API)
-    const aiResponse = await callGroq(message, contextData);
+    const aiResponse = await callGroq(message, contextData, orderData);
 
     console.log('[Agent] Response generated successfully');
 
