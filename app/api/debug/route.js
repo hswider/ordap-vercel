@@ -33,9 +33,26 @@ export async function GET(request) {
       });
     }
 
-    // Get orders sorted by newest first to find Amazon orders
-    const ordersRes = await axios.get(`${baseUrl}/rest/api/orders/?limit=50&sort=orderedAtDesc`, { headers });
+    // Get newest orders
+    const ordersRes = await axios.get(`${baseUrl}/rest/api/orders/?limit=10&sort=orderedAtDesc`, { headers });
     const orders = ordersRes.data?.orders || [];
+
+    // Show the 3 newest orders with full details
+    const newestOrders = orders.slice(0, 3).map(o => {
+      const platformId = o.platformAccountId || o.platformId;
+      const platformInfo = platformMap[platformId];
+      return {
+        id: o.id,
+        platformAccountId: o.platformAccountId,
+        platformIdType: typeof o.platformAccountId,
+        lookupKey: platformId,
+        lookupKeyType: typeof platformId,
+        platformInfoFound: !!platformInfo,
+        platformInfo,
+        finalLabel: platformInfo?.name || `Platform ${platformId}`,
+        orderedAt: o.orderedAt
+      };
+    });
 
     // Find orders with different platforms (especially Amazon)
     const amazonOrders = orders.filter(o => o.platformAccountId >= 100).slice(0, 5);
@@ -64,6 +81,7 @@ export async function GET(request) {
 
     return NextResponse.json({
       totalPlatforms: Object.keys(platformMap).length,
+      newestOrders,
       amazonPlatforms,
       debugOrders,
       rawPlatformMapSample: platformMapRes.data?.slice(0, 3)
