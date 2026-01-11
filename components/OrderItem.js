@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function OrderItem({ order }) {
   const formatDate = (dateStr) => {
@@ -58,39 +59,44 @@ export default function OrderItem({ order }) {
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
-      {/* Order Header */}
-      <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          {renderPlatformIcon(order.channel?.platform)}
-          <div>
-            <div className="font-semibold text-gray-900">
-              {order.channel?.label || 'Nieznany kanal'}
-            </div>
-            <div className="text-sm text-gray-500">
-              ID: {order.id} {order.externalId && `| Ext: ${order.externalId}`}
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <span
-            className={`px-3 py-1 rounded-full text-sm font-medium ${
-              order.status?.paymentStatus === 'PAID'
-                ? 'bg-green-100 text-green-800'
-                : 'bg-red-100 text-red-800'
-            }`}
-          >
-            {order.status?.paymentStatus === 'PAID' ? 'Oplacone' : 'Nieoplacone'}
-          </span>
-          <div className="text-right">
-            <div className="font-bold text-lg text-gray-900">
-              {formatPrice(order.financials?.totalGross, order.financials?.currency)}
-            </div>
-            <div className="text-sm text-gray-500">
-              {formatDate(order.dates?.orderedAt)}
+      {/* Order Header - Clickable */}
+      <Link href={`/zamowienia/${order.id}`} className="block">
+        <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between hover:bg-gray-100 transition-colors cursor-pointer">
+          <div className="flex items-center gap-4">
+            {renderPlatformIcon(order.channel?.platform)}
+            <div>
+              <div className="font-semibold text-gray-900">
+                {order.channel?.label || 'Nieznany kanal'}
+              </div>
+              <div className="text-sm text-gray-500">
+                ID: {order.id} {order.externalId && `| Ext: ${order.externalId}`}
+              </div>
             </div>
           </div>
+          <div className="flex items-center gap-4">
+            <span
+              className={`px-3 py-1 rounded-full text-sm font-medium ${
+                order.status?.paymentStatus === 'PAID'
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-red-100 text-red-800'
+              }`}
+            >
+              {order.status?.paymentStatus === 'PAID' ? 'Oplacone' : 'Nieoplacone'}
+            </span>
+            <div className="text-right">
+              <div className="font-bold text-lg text-gray-900">
+                {formatPrice(order.financials?.totalGross, order.financials?.currency)}
+              </div>
+              <div className="text-sm text-gray-500">
+                {formatDate(order.dates?.orderedAt)}
+              </div>
+            </div>
+            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
         </div>
-      </div>
+      </Link>
 
       {/* Order Items */}
       <div className="divide-y divide-gray-100">
