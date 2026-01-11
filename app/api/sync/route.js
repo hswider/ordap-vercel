@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { initDatabase, saveOrders, getLastSyncDate } from '@/lib/db';
-import { fetchAllNewOrders } from '@/lib/apilo';
+import { initDatabase, saveOrders, getLastSyncDate, getOrdersMissingSendDates, updateOrderSendDates } from '@/lib/db';
+import { fetchAllNewOrders, fetchOrderSendDates } from '@/lib/apilo';
 
 export async function GET(request) {
   // Verify cron secret for security (optional)
@@ -33,9 +33,31 @@ export async function GET(request) {
       console.log('[Sync] No new orders to save');
     }
 
+    // Fetch send dates for orders missing them (max 50 per sync to stay within rate limits)
+    const ordersMissingSendDates = await getOrdersMissingSendDates(50);
+    let sendDatesUpdated = 0;
+
+    if (ordersMissingSendDates.length > 0) {
+      console.log('[Sync] Fetching send dates for', ordersMissingSendDates.length, 'orders');
+
+      for (const orderId of ordersMissingSendDates) {
+        const sendDates = await fetchOrderSendDates(orderId);
+        if (sendDates) {
+          await updateOrderSendDates(orderId, sendDates.sendDateMin, sendDates.sendDateMax);
+          sendDatesUpdated++;
+        }
+        // Small delay to respect API rate limits (150 req/min)
+        await new Promise(resolve => setTimeout(resolve, 450));
+      }
+
+      console.log('[Sync] Updated send dates for', sendDatesUpdated, 'orders');
+    }
+
     return NextResponse.json({
       success: true,
       count: orders.length,
+      sendDatesUpdated,
+      ordersMissingSendDates: ordersMissingSendDates.length,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
