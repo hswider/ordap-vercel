@@ -81,17 +81,50 @@ export async function GET(request) {
       });
     }
 
-    // Get newest orders - same as sync endpoint
-    const ordersRes = await axios.get(`${baseUrl}/rest/api/orders/?limit=500&offset=0&sort=orderedAtDesc`, { headers });
-    const orders = ordersRes.data?.orders || [];
+    // Try different API queries to find newer orders
+    const today = new Date().toISOString().split('T')[0];
 
-    // Check if specific orders exist in the API response
-    const orderIds = orders.map(o => o.id);
-    const checkOrders = ['AM260101867', 'AM260101868', 'AM260101865', 'AM260101863'];
-    const foundInList = {};
-    checkOrders.forEach(id => {
-      foundInList[id] = orderIds.includes(id);
-    });
+    // Query 1: Default sort
+    const res1 = await axios.get(`${baseUrl}/rest/api/orders/?limit=10&sort=orderedAtDesc`, { headers });
+
+    // Query 2: Try with updatedAfter filter for today
+    let res2orders = [];
+    try {
+      const todayStart = `${today}T00:00:00+01:00`;
+      const res2 = await axios.get(`${baseUrl}/rest/api/orders/?limit=50&updatedAfter=${encodeURIComponent(todayStart)}`, { headers });
+      res2orders = res2.data?.orders || [];
+    } catch (e) {
+      res2orders = [];
+    }
+
+    // Query 3: Try with orderedAfter filter
+    let res3orders = [];
+    try {
+      const todayStart = `${today}T00:00:00+01:00`;
+      const res3 = await axios.get(`${baseUrl}/rest/api/orders/?limit=50&orderedAfter=${encodeURIComponent(todayStart)}`, { headers });
+      res3orders = res3.data?.orders || [];
+    } catch (e) {
+      res3orders = [];
+    }
+
+    const orders = res1.data?.orders || [];
+
+    // Check results
+    const foundInList = {
+      defaultSort: {
+        count: orders.length,
+        first: orders[0]?.id,
+        ids: orders.slice(0, 5).map(o => o.id)
+      },
+      updatedAfterToday: {
+        count: res2orders.length,
+        ids: res2orders.slice(0, 10).map(o => o.id)
+      },
+      orderedAfterToday: {
+        count: res3orders.length,
+        ids: res3orders.slice(0, 10).map(o => o.id)
+      }
+    };
 
     // Show the 3 newest orders with full details
     const newestOrders = orders.slice(0, 3).map(o => {
