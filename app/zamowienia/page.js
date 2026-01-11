@@ -13,8 +13,26 @@ export default function ZamowieniaPage() {
   const [syncing, setSyncing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [perPage, setPerPage] = useState(20);
+  const [channels, setChannels] = useState([]);
+  const [selectedChannel, setSelectedChannel] = useState('');
 
-  const fetchOrders = useCallback(async (page = 1, search = '', itemsPerPage = 20) => {
+  // Fetch available channels
+  useEffect(() => {
+    async function loadChannels() {
+      try {
+        const res = await fetch('/api/channels');
+        const data = await res.json();
+        if (data.channels) {
+          setChannels(data.channels);
+        }
+      } catch (err) {
+        console.error('Failed to load channels:', err);
+      }
+    }
+    loadChannels();
+  }, []);
+
+  const fetchOrders = useCallback(async (page = 1, search = '', itemsPerPage = 20, channel = '') => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -24,6 +42,10 @@ export default function ZamowieniaPage() {
 
       if (search) {
         params.append('search', search);
+      }
+
+      if (channel) {
+        params.append('channel', channel);
       }
 
       const res = await fetch(`/api/orders?${params}`);
@@ -46,17 +68,22 @@ export default function ZamowieniaPage() {
 
   const handleSearch = (query) => {
     setSearchQuery(query);
-    fetchOrders(1, query, perPage);
+    fetchOrders(1, query, perPage, selectedChannel);
   };
 
   const handlePageChange = (newPage) => {
-    fetchOrders(newPage, searchQuery, perPage);
+    fetchOrders(newPage, searchQuery, perPage, selectedChannel);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handlePerPageChange = (newPerPage) => {
     setPerPage(newPerPage);
-    fetchOrders(1, searchQuery, newPerPage);
+    fetchOrders(1, searchQuery, newPerPage, selectedChannel);
+  };
+
+  const handleChannelChange = (channel) => {
+    setSelectedChannel(channel);
+    fetchOrders(1, searchQuery, perPage, channel);
   };
 
   const triggerSync = async () => {
@@ -68,7 +95,7 @@ export default function ZamowieniaPage() {
       if (data.error) {
         setError(data.error);
       } else {
-        await fetchOrders(1, searchQuery, perPage);
+        await fetchOrders(1, searchQuery, perPage, selectedChannel);
       }
     } catch (err) {
       setError('Synchronizacja nie powiodla sie');
@@ -78,50 +105,73 @@ export default function ZamowieniaPage() {
   };
 
   useEffect(() => {
-    fetchOrders(1, '', 20);
+    fetchOrders(1, '', 20, '');
   }, [fetchOrders]);
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <main className="max-w-3xl mx-auto px-3 py-4 sm:px-6 sm:py-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="flex justify-between items-center gap-3 mb-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Zamowienia</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Zamowienia</h1>
             {pagination && (
-              <p className="text-gray-500">
-                {searchQuery
-                  ? `Znaleziono ${pagination.totalCount} zamowien`
-                  : `Laczna liczba zamowien: ${pagination.totalCount}`}
+              <p className="text-xs sm:text-sm text-gray-500">
+                {selectedChannel ? `${selectedChannel}: ` : ''}
+                {pagination.totalCount} zam.
               </p>
             )}
           </div>
           <button
             onClick={triggerSync}
             disabled={syncing}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
           >
-            {syncing ? 'Synchronizacja...' : 'Synchronizuj'}
+            {syncing ? 'Sync...' : 'Sync'}
           </button>
         </div>
 
-        {/* Search Box and Per Page Selector */}
-        <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-          <div className="flex-grow">
-            <SearchBox onSearch={handleSearch} initialValue={searchQuery} />
+        {/* Filters */}
+        <div className="mb-4 flex flex-col gap-3">
+          {/* Search and Channel Filter Row */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-grow">
+              <SearchBox onSearch={handleSearch} initialValue={searchQuery} />
+            </div>
+            <select
+              value={selectedChannel}
+              onChange={(e) => handleChannelChange(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            >
+              <option value="">Wszystkie kanaly</option>
+              {channels.map((ch, idx) => (
+                <option key={idx} value={ch.label}>
+                  {ch.label}
+                </option>
+              ))}
+            </select>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Pokazuj:</span>
+          {/* Per Page Selector */}
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-gray-600">Pokazuj:</span>
             <select
               value={perPage}
               onChange={(e) => handlePerPageChange(Number(e.target.value))}
-              className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-2 py-1 border border-gray-300 rounded bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value={20}>20</option>
               <option value={50}>50</option>
               <option value={100}>100</option>
             </select>
-            <span className="text-sm text-gray-600">na stronie</span>
+            <span className="text-gray-600">na stronie</span>
+            {selectedChannel && (
+              <button
+                onClick={() => handleChannelChange('')}
+                className="ml-2 px-2 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-xs"
+              >
+                Wyczysc filtr
+              </button>
+            )}
           </div>
         </div>
 
