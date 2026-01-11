@@ -11,14 +11,17 @@ export default function Navigation() {
     { href: '/zamowienia', label: 'Zamowienia', icon: '📦' },
     { href: '/wms', label: 'WMS', icon: '🏭' },
     { href: '/crm', label: 'CRM', icon: '👥' },
+    { href: '/agent', label: 'Agent AI', icon: '🤖' },
   ];
 
   return (
     <nav className="bg-white shadow sticky top-0 z-50">
-      <div className="max-w-3xl mx-auto px-3 sm:px-6">
+      <div className="max-w-4xl mx-auto px-2 sm:px-6">
         <div className="flex">
           {navItems.map((item) => {
-            const isActive = pathname === item.href || (item.href === '/zamowienia' && pathname.startsWith('/zamowienia'));
+            const isActive = pathname === item.href ||
+              (item.href === '/zamowienia' && pathname.startsWith('/zamowienia')) ||
+              (item.href === '/agent' && pathname.startsWith('/agent'));
             return (
               <Link
                 key={item.href}
