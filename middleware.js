@@ -1,13 +1,24 @@
 import { NextResponse } from 'next/server';
 
 // Routes that don't require authentication
-const publicRoutes = ['/login', '/api/auth'];
+const publicRoutes = [
+  '/login',
+  '/api/auth',
+  '/api/sync',           // Cron job
+  '/api/sync-historical' // Historical sync
+];
 
 export function middleware(request) {
   const { pathname } = request.nextUrl;
 
   // Allow public routes
   if (publicRoutes.some(route => pathname.startsWith(route))) {
+    return NextResponse.next();
+  }
+
+  // Allow requests with Vercel Cron secret header
+  const cronSecret = request.headers.get('authorization');
+  if (pathname.startsWith('/api/') && cronSecret) {
     return NextResponse.next();
   }
 
