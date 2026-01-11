@@ -5,12 +5,13 @@ export async function GET(request) {
   try {
     await initDatabase();
 
-    // Get pagination params from URL
+    // Get params from URL
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page')) || 1;
     const perPage = parseInt(searchParams.get('perPage')) || 20;
+    const search = searchParams.get('search') || '';
 
-    const result = await getOrders(page, perPage);
+    const result = await getOrders(page, perPage, search);
 
     return NextResponse.json({
       ...result,
