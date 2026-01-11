@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
 export default function Home() {
   const [stats, setStats] = useState(null);
@@ -96,6 +97,28 @@ export default function Home() {
     );
   };
 
+  // Colors for pie chart
+  const CHART_COLORS = [
+    '#FF9900', // Amazon orange
+    '#FF5A00', // Allegro orange
+    '#96BF48', // Shopify green
+    '#E31E24', // Kaufland red
+    '#0064D2', // eBay blue
+    '#00C2A8', // Cdiscount teal
+    '#6B7280', // Gray for others
+    '#8B5CF6', // Purple
+    '#EC4899', // Pink
+  ];
+
+  const getChartData = () => {
+    if (!stats?.last30DaysByPlatform) return [];
+    return stats.last30DaysByPlatform.map((item, idx) => ({
+      name: getPlatformLabel(item.platform),
+      value: item.count,
+      color: CHART_COLORS[idx % CHART_COLORS.length]
+    }));
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <main className="max-w-3xl mx-auto px-3 py-4 sm:px-6 sm:py-6">
@@ -168,22 +191,59 @@ export default function Home() {
               )}
             </div>
 
-            {/* Orders Last 30 Days by Platform */}
+            {/* Orders Last 30 Days - Chart + List */}
             <div className="bg-white rounded-lg shadow">
               <div className="px-4 py-3 border-b border-gray-100">
                 <h2 className="font-semibold text-gray-900">Zamowienia z 30 dni</h2>
               </div>
-              <div className="divide-y divide-gray-50">
-                {stats?.last30DaysByPlatform?.map((item, idx) => (
-                  <div key={idx} className="px-4 py-2.5 flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      {renderPlatformIcon(item.platform)}
-                      <span className="text-sm text-gray-700">{getPlatformLabel(item.platform)}</span>
-                    </div>
-                    <span className="font-semibold text-gray-900">{item.count}</span>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2">
+                {/* Pie Chart */}
+                <div className="p-4 flex items-center justify-center">
+                  <div className="w-full h-48 sm:h-56">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={getChartData()}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={40}
+                          outerRadius={70}
+                          paddingAngle={2}
+                          dataKey="value"
+                        >
+                          {getChartData().map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          formatter={(value, name) => [value, name]}
+                          contentStyle={{ fontSize: '12px' }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
                   </div>
-                ))}
+                </div>
+
+                {/* List */}
+                <div className="border-t sm:border-t-0 sm:border-l border-gray-100">
+                  <div className="divide-y divide-gray-50">
+                    {stats?.last30DaysByPlatform?.map((item, idx) => (
+                      <div key={idx} className="px-4 py-2 flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: CHART_COLORS[idx % CHART_COLORS.length] }}
+                          />
+                          <span className="text-xs text-gray-700">{getPlatformLabel(item.platform)}</span>
+                        </div>
+                        <span className="text-xs font-semibold text-gray-900">{item.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
+
               <div className="px-4 py-2.5 border-t border-gray-200 flex justify-between items-center bg-gray-50">
                 <span className="text-sm font-medium text-gray-700">Razem (30 dni)</span>
                 <span className="font-bold text-gray-900">
