@@ -167,7 +167,7 @@ export default function AgentPage() {
 
         {/* Info */}
         <div className="mt-4 text-center text-xs text-gray-400">
-          Powered by OpenAI GPT
+          Powered by Groq AI (Llama 3.3)
         </div>
       </main>
     </div>

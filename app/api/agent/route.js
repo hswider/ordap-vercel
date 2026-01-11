@@ -8,7 +8,7 @@ import {
   getStatusDistribution
 } from '@/lib/db';
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
 // Currency conversion
 const EUR_TO_PLN = 4.35;
@@ -160,10 +160,10 @@ async function gatherContextData() {
   }
 }
 
-// Call OpenAI API
-async function callOpenAI(message, contextData) {
-  if (!OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY nie jest skonfigurowany. Dodaj go do zmiennych środowiskowych w Vercel.');
+// Call Groq API (free and fast)
+async function callGroq(message, contextData) {
+  if (!GROQ_API_KEY) {
+    throw new Error('GROQ_API_KEY nie jest skonfigurowany. Dodaj go do zmiennych środowiskowych w Vercel.');
   }
 
   const systemPrompt = `Jesteś asystentem AI dla systemu zarządzania zamówieniami POOM. Odpowiadasz po polsku na pytania dotyczące sprzedaży, zamówień i statystyk.
@@ -219,14 +219,14 @@ OGÓLNE STATYSTYKI:
 - Anulowane: ${contextData?.overall?.canceledOrders || 0}
 - Liczba platform: ${contextData?.overall?.platformCount || 0}`;
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${OPENAI_API_KEY}`
+      'Authorization': `Bearer ${GROQ_API_KEY}`
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
+      model: 'llama-3.3-70b-versatile',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: message }
@@ -238,7 +238,7 @@ OGÓLNE STATYSTYKI:
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.error?.message || 'OpenAI API error');
+    throw new Error(error.error?.message || 'Groq API error');
   }
 
   const data = await response.json();
@@ -268,8 +268,8 @@ export async function POST(request) {
       );
     }
 
-    // Call OpenAI
-    const aiResponse = await callOpenAI(message, contextData);
+    // Call Groq (free API)
+    const aiResponse = await callGroq(message, contextData);
 
     console.log('[Agent] Response generated successfully');
 
