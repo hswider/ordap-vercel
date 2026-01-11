@@ -10,12 +10,9 @@ export default function Home() {
 
   const fetchStats = async () => {
     try {
-      const res = await fetch('/api/orders?page=1&perPage=1');
+      const res = await fetch('/api/stats');
       const data = await res.json();
-      setStats({
-        totalOrders: data.pagination?.totalCount || 0,
-        lastSync: data.lastSync
-      });
+      setStats(data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -42,12 +39,33 @@ export default function Home() {
     fetchStats();
   }, []);
 
+  const getPlatformIcon = (platform) => {
+    const icons = {
+      'Amazon': '🛒',
+      'Allegro': '🅰️',
+      'Shopify': '🛍️',
+      'Kaufland': '🏪',
+      'eBay': '📦',
+    };
+    return icons[platform] || '📋';
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
-      <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-500">Przeglad zamowien z Apilo</p>
+      <main className="max-w-3xl mx-auto px-3 py-4 sm:px-6 sm:py-6">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Dashboard</h1>
+            <p className="text-xs sm:text-sm text-gray-500">Przeglad zamowien</p>
+          </div>
+          <button
+            onClick={triggerSync}
+            disabled={syncing}
+            className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          >
+            {syncing ? 'Sync...' : 'Sync'}
+          </button>
         </div>
 
         {loading ? (
@@ -55,60 +73,86 @@ export default function Home() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Total Orders Card */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex items-center">
-                <div className="p-3 bg-blue-100 rounded-full">
-                  <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm text-gray-500">Wszystkich zamowien</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats?.totalOrders || 0}</p>
-                </div>
+          <div className="space-y-4">
+            {/* Summary Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="bg-white rounded-lg shadow p-4">
+                <p className="text-xs text-gray-500">Dzisiaj</p>
+                <p className="text-2xl font-bold text-blue-600">{stats?.summary?.ordersToday || 0}</p>
+              </div>
+              <div className="bg-white rounded-lg shadow p-4">
+                <p className="text-xs text-gray-500">Wczoraj</p>
+                <p className="text-2xl font-bold text-gray-700">{stats?.summary?.ordersYesterday || 0}</p>
+              </div>
+              <div className="bg-white rounded-lg shadow p-4">
+                <p className="text-xs text-gray-500">Wyslano dzis</p>
+                <p className="text-2xl font-bold text-green-600">{stats?.summary?.shippedToday || 0}</p>
+              </div>
+              <div className="bg-white rounded-lg shadow p-4">
+                <p className="text-xs text-gray-500">Wyslano wczoraj</p>
+                <p className="text-2xl font-bold text-gray-700">{stats?.summary?.shippedYesterday || 0}</p>
               </div>
             </div>
 
-            {/* Last Sync Card */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex items-center">
-                <div className="p-3 bg-green-100 rounded-full">
-                  <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
+            {/* Orders Today by Platform */}
+            <div className="bg-white rounded-lg shadow">
+              <div className="px-4 py-3 border-b border-gray-100">
+                <h2 className="font-semibold text-gray-900">Zamowienia dzisiaj</h2>
+              </div>
+              <div className="divide-y divide-gray-50">
+                {stats?.todayByPlatform?.length > 0 ? (
+                  stats.todayByPlatform.map((item, idx) => (
+                    <div key={idx} className="px-4 py-2.5 flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <span>{getPlatformIcon(item.platform)}</span>
+                        <span className="text-sm text-gray-700">{item.platform}</span>
+                      </div>
+                      <span className="font-semibold text-gray-900">{item.count}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="px-4 py-3 text-sm text-gray-500">Brak zamowien dzisiaj</div>
+                )}
+              </div>
+              {stats?.todayByPlatform?.length > 0 && (
+                <div className="px-4 py-2.5 border-t border-gray-200 flex justify-between items-center bg-gray-50">
+                  <span className="text-sm font-medium text-gray-700">Razem</span>
+                  <span className="font-bold text-blue-600">{stats?.summary?.ordersToday || 0}</span>
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm text-gray-500">Ostatnia synchronizacja</p>
-                  <p className="text-lg font-medium text-gray-900">
-                    {stats?.lastSync
-                      ? new Date(stats.lastSync).toLocaleString('pl-PL')
-                      : 'Brak'}
-                  </p>
-                </div>
+              )}
+            </div>
+
+            {/* Orders Last 30 Days by Platform */}
+            <div className="bg-white rounded-lg shadow">
+              <div className="px-4 py-3 border-b border-gray-100">
+                <h2 className="font-semibold text-gray-900">Zamowienia z 30 dni</h2>
+              </div>
+              <div className="divide-y divide-gray-50">
+                {stats?.last30DaysByPlatform?.map((item, idx) => (
+                  <div key={idx} className="px-4 py-2.5 flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <span>{getPlatformIcon(item.platform)}</span>
+                      <span className="text-sm text-gray-700">{item.platform}</span>
+                    </div>
+                    <span className="font-semibold text-gray-900">{item.count}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="px-4 py-2.5 border-t border-gray-200 flex justify-between items-center bg-gray-50">
+                <span className="text-sm font-medium text-gray-700">Razem (30 dni)</span>
+                <span className="font-bold text-gray-900">
+                  {stats?.last30DaysByPlatform?.reduce((sum, item) => sum + item.count, 0) || 0}
+                </span>
               </div>
             </div>
 
-            {/* Quick Actions Card */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <p className="text-sm text-gray-500 mb-4">Szybkie akcje</p>
-              <div className="space-y-3">
-                <button
-                  onClick={triggerSync}
-                  disabled={syncing}
-                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {syncing ? 'Synchronizacja...' : 'Synchronizuj teraz'}
-                </button>
-                <Link
-                  href="/zamowienia"
-                  className="block w-full px-4 py-2 bg-gray-100 text-gray-700 text-center rounded-lg hover:bg-gray-200"
-                >
-                  Zobacz zamowienia
-                </Link>
-              </div>
-            </div>
+            {/* Quick Link */}
+            <Link
+              href="/zamowienia"
+              className="block w-full px-4 py-3 bg-blue-600 text-white text-center rounded-lg hover:bg-blue-700 font-medium"
+            >
+              Zobacz wszystkie zamowienia ({stats?.summary?.totalOrders || 0})
+            </Link>
           </div>
         )}
       </main>
