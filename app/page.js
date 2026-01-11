@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 
 export default function Home() {
   const [stats, setStats] = useState(null);
@@ -160,6 +160,56 @@ export default function Home() {
               <div className="bg-white rounded-lg shadow p-4">
                 <p className="text-xs text-gray-500">Wyslano wczoraj</p>
                 <p className="text-2xl font-bold text-gray-700">{stats?.summary?.shippedYesterday || 0}</p>
+              </div>
+            </div>
+
+            {/* Revenue Cards */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow p-4 text-white">
+                <p className="text-xs text-green-100">Obrót dzisiaj</p>
+                <p className="text-2xl font-bold">{stats?.revenue?.todayEur?.toLocaleString('pl-PL') || 0} €</p>
+              </div>
+              <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow p-4 text-white">
+                <p className="text-xs text-blue-100">Obrót 30 dni</p>
+                <p className="text-2xl font-bold">{stats?.revenue?.last30DaysEur?.toLocaleString('pl-PL') || 0} €</p>
+              </div>
+            </div>
+
+            {/* Revenue Chart - Last 7 Days */}
+            <div className="bg-white rounded-lg shadow">
+              <div className="px-4 py-3 border-b border-gray-100">
+                <h2 className="font-semibold text-gray-900">Sprzedaż ostatnie 7 dni (EUR)</h2>
+              </div>
+              <div className="p-4">
+                <div className="h-48 sm:h-56">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={stats?.revenue?.last7Days || []}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis
+                        dataKey="day"
+                        tick={{ fontSize: 12 }}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis
+                        tick={{ fontSize: 12 }}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(value) => `${value}€`}
+                      />
+                      <Tooltip
+                        formatter={(value) => [`${value.toLocaleString('pl-PL')} €`, 'Sprzedaż']}
+                        labelFormatter={(label) => label}
+                        contentStyle={{ fontSize: '12px' }}
+                      />
+                      <Bar
+                        dataKey="revenue"
+                        fill="#3B82F6"
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
             </div>
 

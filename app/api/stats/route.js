@@ -2,6 +2,17 @@ import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
 import { initDatabase } from '@/lib/db';
 
+// Kurs wymiany PLN -> EUR (przybliżony)
+const PLN_TO_EUR = 0.23;
+
+function convertToEur(amount, currency) {
+  if (!amount) return 0;
+  if (currency === 'EUR') return parseFloat(amount);
+  if (currency === 'PLN') return parseFloat(amount) * PLN_TO_EUR;
+  // Dla innych walut zakładamy EUR
+  return parseFloat(amount);
+}
+
 export async function GET() {
   try {
     await initDatabase();
@@ -57,6 +68,69 @@ export async function GET() {
       SELECT COUNT(*) as count FROM orders
     `;
 
+    // Revenue today by currency
+    const revenueToday = await sql`
+      SELECT currency, SUM(total_gross) as total
+      FROM orders
+      WHERE ordered_at >= CURRENT_DATE
+      GROUP BY currency
+    `;
+
+    // Revenue last 30 days by currency
+    const revenue30Days = await sql`
+      SELECT currency, SUM(total_gross) as total
+      FROM orders
+      WHERE ordered_at >= CURRENT_DATE - INTERVAL '30 days'
+      GROUP BY currency
+    `;
+
+    // Revenue last 7 days by day
+    const revenueLast7Days = await sql`
+      SELECT
+        DATE(ordered_at) as date,
+        currency,
+        SUM(total_gross) as total
+      FROM orders
+      WHERE ordered_at >= CURRENT_DATE - INTERVAL '7 days'
+      GROUP BY DATE(ordered_at), currency
+      ORDER BY date ASC
+    `;
+
+    // Calculate revenue in EUR
+    let revenueTodayEur = 0;
+    revenueToday.rows.forEach(r => {
+      revenueTodayEur += convertToEur(r.total, r.currency);
+    });
+
+    let revenue30DaysEur = 0;
+    revenue30Days.rows.forEach(r => {
+      revenue30DaysEur += convertToEur(r.total, r.currency);
+    });
+
+    // Build daily revenue chart data
+    const dailyRevenueMap = {};
+    revenueLast7Days.rows.forEach(r => {
+      const dateStr = new Date(r.date).toISOString().split('T')[0];
+      if (!dailyRevenueMap[dateStr]) {
+        dailyRevenueMap[dateStr] = 0;
+      }
+      dailyRevenueMap[dateStr] += convertToEur(r.total, r.currency);
+    });
+
+    // Create array for last 7 days
+    const last7DaysRevenue = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      const dayName = date.toLocaleDateString('pl-PL', { weekday: 'short' });
+      last7DaysRevenue.push({
+        date: dateStr,
+        day: dayName,
+        revenue: Math.round(dailyRevenueMap[dateStr] || 0)
+      });
+    }
+
     return NextResponse.json({
       todayByPlatform: todayByPlatform.rows.map(r => ({
         platform: r.platform || 'Inne',
@@ -72,6 +146,11 @@ export async function GET() {
         shippedToday: parseInt(shippedToday.rows[0].count),
         shippedYesterday: parseInt(shippedYesterday.rows[0].count),
         totalOrders: parseInt(totalOrders.rows[0].count)
+      },
+      revenue: {
+        todayEur: Math.round(revenueTodayEur),
+        last30DaysEur: Math.round(revenue30DaysEur),
+        last7Days: last7DaysRevenue
       }
     });
   } catch (error) {
