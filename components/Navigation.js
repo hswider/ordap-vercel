@@ -9,7 +9,7 @@ export default function Navigation() {
   const navItems = [
     { href: '/', label: 'Dashboard', icon: '📊' },
     { href: '/zamowienia', label: 'Zamowienia', icon: '📦' },
-    { href: '/wms', label: 'WMS', icon: '🏭' },
+    { href: '/magazyny', label: 'Magazyny', icon: '🏭' },
     { href: '/crm', label: 'CRM', icon: '👥' },
     { href: '/agent', label: 'Agent AI', icon: '🤖' },
   ];
@@ -21,6 +21,7 @@ export default function Navigation() {
           {navItems.map((item) => {
             const isActive = pathname === item.href ||
               (item.href === '/zamowienia' && pathname.startsWith('/zamowienia')) ||
+              (item.href === '/magazyny' && pathname.startsWith('/magazyny')) ||
               (item.href === '/agent' && pathname.startsWith('/agent'));
             return (
               <Link
