@@ -16,13 +16,12 @@ export default function Navigation() {
       <div className="max-w-3xl mx-auto px-3 sm:px-6">
         {/* Top bar with logo */}
         <div className="flex items-center justify-between h-12 sm:h-14">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center">
             <img
               src="https://cdn.shopify.com/s/files/1/0974/8525/9083/files/dxzadaa.png?v=1763118294"
               alt="POOM Logo"
               className="h-8 sm:h-10 w-auto"
             />
-            <span className="text-lg sm:text-xl font-bold text-gray-800">POOM</span>
           </Link>
 
           {/* Desktop navigation */}
