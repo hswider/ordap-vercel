@@ -55,12 +55,47 @@ export default function OrderDetailsPage() {
 
   const getStatusBadge = (status) => {
     const statusMap = {
-      4: { label: 'Nowe', color: 'bg-blue-100 text-blue-800' },
-      8: { label: 'W realizacji', color: 'bg-yellow-100 text-yellow-800' },
-      16: { label: 'Wyslane', color: 'bg-green-100 text-green-800' },
-      32: { label: 'Zakonczone', color: 'bg-gray-100 text-gray-800' },
-      46: { label: 'Do wyslania', color: 'bg-purple-100 text-purple-800' },
-      64: { label: 'Anulowane', color: 'bg-red-100 text-red-800' }
+      // Podstawowe statusy
+      4: { label: 'Niepotwierdzone', color: 'bg-gray-100 text-gray-800' },
+      1: { label: 'Nowy', color: 'bg-blue-100 text-blue-800' },
+      7: { label: 'W realizacji', color: 'bg-yellow-100 text-yellow-800' },
+      10: { label: 'Do wyslania', color: 'bg-purple-100 text-purple-800' },
+      13: { label: 'Wyslane', color: 'bg-green-100 text-green-800' },
+      // PALETY
+      22: { label: 'PALETY-NOWE', color: 'bg-blue-100 text-blue-800' },
+      113: { label: 'PALETY-W REALIZACJI', color: 'bg-yellow-100 text-yellow-800' },
+      166: { label: 'PILNE - PALETY', color: 'bg-orange-100 text-orange-800' },
+      169: { label: 'BARDZO PILNE - PALETY', color: 'bg-red-100 text-red-800' },
+      // PIKOWKI
+      25: { label: 'PIKOWKI-NOWE', color: 'bg-blue-100 text-blue-800' },
+      116: { label: 'PIKOWKI-W REALIZACJI', color: 'bg-yellow-100 text-yellow-800' },
+      103: { label: 'PILNE - PIKOWKI', color: 'bg-orange-100 text-orange-800' },
+      106: { label: 'BARDZO PILNE - PIKOWKI', color: 'bg-red-100 text-red-800' },
+      // LAWKI
+      28: { label: 'LAWKI-NOWE', color: 'bg-blue-100 text-blue-800' },
+      119: { label: 'LAWKI-W REALIZACJI', color: 'bg-yellow-100 text-yellow-800' },
+      172: { label: 'PILNE - LAWKI', color: 'bg-orange-100 text-orange-800' },
+      175: { label: 'BARDZO PILNE - LAWKI', color: 'bg-red-100 text-red-800' },
+      // LAWKI SIEDZISKA
+      199: { label: 'LAWKI SIEDZISKA-NOWE', color: 'bg-blue-100 text-blue-800' },
+      205: { label: 'LAWKI SIEDZISKA-W REALIZACJI', color: 'bg-yellow-100 text-yellow-800' },
+      178: { label: 'PILNE - LAWKI SIEDZISKA', color: 'bg-orange-100 text-orange-800' },
+      181: { label: 'BARDZO PILNE - LAWKI SIEDZISKA', color: 'bg-red-100 text-red-800' },
+      // POOM KIDS
+      31: { label: 'POOM KIDS-NOWE', color: 'bg-blue-100 text-blue-800' },
+      122: { label: 'POOM KIDS-W REALIZACJI', color: 'bg-yellow-100 text-yellow-800' },
+      228: { label: 'PILNE - POOM KIDS', color: 'bg-orange-100 text-orange-800' },
+      225: { label: 'BARDZO PILNE - POOM KIDS', color: 'bg-red-100 text-red-800' },
+      // LEGOWISKA
+      46: { label: 'LEGOWISKA-NOWE', color: 'bg-blue-100 text-blue-800' },
+      131: { label: 'LEGOWISKA-W REALIZACJI', color: 'bg-yellow-100 text-yellow-800' },
+      184: { label: 'PILNE - LEGOWISKA', color: 'bg-orange-100 text-orange-800' },
+      187: { label: 'BARDZO PILNE - LEGOWISKA', color: 'bg-red-100 text-red-800' },
+      // SARIS GARAGE
+      57: { label: 'SARIS GARAGE-NOWE', color: 'bg-blue-100 text-blue-800' },
+      125: { label: 'SARIS GARAGE-W REALIZACJI', color: 'bg-yellow-100 text-yellow-800' },
+      220: { label: 'SARIS GARAGE BARDZO PILNE', color: 'bg-red-100 text-red-800' },
+      209: { label: 'SARIS GARAGE', color: 'bg-gray-100 text-gray-800' }
     };
     const s = statusMap[status] || { label: `Status ${status}`, color: 'bg-gray-100 text-gray-800' };
     return <span className={`px-3 py-1 rounded-full text-sm font-medium ${s.color}`}>{s.label}</span>;
