@@ -163,7 +163,7 @@ async function gatherContextData() {
 }
 
 // Call Groq API (free and fast)
-async function callGroq(message, contextData, orderData = []) {
+async function callGroq(message, contextData, orderData = [], history = []) {
   if (!GROQ_API_KEY) {
     throw new Error('GROQ_API_KEY nie jest skonfigurowany. Dodaj go do zmiennych środowiskowych w Vercel.');
   }
@@ -177,6 +177,7 @@ async function callGroq(message, contextData, orderData = []) {
 
 WAŻNE ZASADY:
 - Odpowiadaj krótko i konkretnie
+- Pamiętaj kontekst rozmowy - możesz odwoływać się do poprzednich pytań i odpowiedzi
 - Wszystkie kwoty statystyk są już przeliczone na PLN
 - Używaj polskiego formatowania walut (np. "1 234,56 PLN")
 - Formatuj liczby z separatorami tysięcy (spacja jako separator)
@@ -222,6 +223,24 @@ OGÓLNE STATYSTYKI:
 - Anulowane: ${contextData?.overall?.canceledOrders || 0}
 - Liczba platform: ${contextData?.overall?.platformCount || 0}${orderContext}`;
 
+  // Build messages array with history
+  const messages = [
+    { role: 'system', content: systemPrompt }
+  ];
+
+  // Add conversation history (skip the last message as it's the current one)
+  if (history.length > 1) {
+    const previousMessages = history.slice(0, -1);
+    for (const msg of previousMessages) {
+      if (msg.role === 'user' || msg.role === 'assistant') {
+        messages.push({ role: msg.role, content: msg.content });
+      }
+    }
+  }
+
+  // Add current message
+  messages.push({ role: 'user', content: message });
+
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -230,10 +249,7 @@ OGÓLNE STATYSTYKI:
     },
     body: JSON.stringify({
       model: 'llama-3.3-70b-versatile',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: message }
-      ],
+      messages: messages,
       max_tokens: 1000,
       temperature: 0.7
     })
@@ -250,7 +266,7 @@ OGÓLNE STATYSTYKI:
 
 export async function POST(request) {
   try {
-    const { message } = await request.json();
+    const { message, history = [] } = await request.json();
 
     if (!message || typeof message !== 'string') {
       return NextResponse.json(
@@ -259,7 +275,7 @@ export async function POST(request) {
       );
     }
 
-    console.log('[Agent] Received question:', message);
+    console.log('[Agent] Received question:', message, '| History length:', history.length);
 
     // Gather context data from database
     const contextData = await gatherContextData();
@@ -291,8 +307,8 @@ export async function POST(request) {
       console.log('[Agent] Found orders:', orderData.length);
     }
 
-    // Call Groq (free API)
-    const aiResponse = await callGroq(message, contextData, orderData);
+    // Call Groq (free API) with conversation history
+    const aiResponse = await callGroq(message, contextData, orderData, history);
 
     console.log('[Agent] Response generated successfully');
 
