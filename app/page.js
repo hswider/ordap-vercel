@@ -41,13 +41,33 @@ export default function Home() {
 
   const getPlatformIcon = (platform) => {
     const icons = {
-      'Amazon': '🛒',
-      'Allegro': '🅰️',
-      'Shopify': '🛍️',
-      'Kaufland': '🏪',
-      'eBay': '📦',
+      'Amazon': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Amazon_icon.svg/250px-Amazon_icon.svg.png',
+      'Allegro': 'https://a.allegroimg.com/original/12c30c/0d4b068640de9b0daf22af9d97c5',
+      'Shopify': 'https://e7.pngegg.com/pngimages/193/871/png-clipart-green-shopping-bag-illustration-shopify-logo-icons-logos-emojis-tech-companies-thumbnail.png',
+      'Kaufland': 'https://upload.wikimedia.org/wikipedia/commons/6/65/Kaufland_Deutschland.png',
+      'eBay': 'https://static.vecteezy.com/system/resources/previews/020/190/417/non_2x/ebay-logo-ebay-icon-free-free-vector.jpg',
+      'Cdiscount': 'https://s3-eu-west-1.amazonaws.com/tpd/logos/46e266b200006400050146b5/0x0.png',
+      'Zamowienia reczne': 'https://thumbs.dreamstime.com/b/ikona-zam%C3%B3wienia-zakupu-oferty-handlu-elektronicznego-czarna-grafika-wektorowa-jest-izolowany-na-bia%C5%82ym-tle-wykorzystanie-do-223270063.jpg',
     };
-    return icons[platform] || '📋';
+    return icons[platform] || null;
+  };
+
+  const renderPlatformIcon = (platform) => {
+    const iconUrl = getPlatformIcon(platform);
+    if (iconUrl) {
+      return (
+        <img
+          src={iconUrl}
+          alt={platform}
+          className="w-6 h-6 rounded object-contain"
+        />
+      );
+    }
+    return (
+      <div className="w-6 h-6 bg-gray-200 rounded flex items-center justify-center text-xs font-bold text-gray-600">
+        {platform?.charAt(0) || '?'}
+      </div>
+    );
   };
 
   return (
@@ -104,7 +124,7 @@ export default function Home() {
                   stats.todayByPlatform.map((item, idx) => (
                     <div key={idx} className="px-4 py-2.5 flex justify-between items-center">
                       <div className="flex items-center gap-2">
-                        <span>{getPlatformIcon(item.platform)}</span>
+                        {renderPlatformIcon(item.platform)}
                         <span className="text-sm text-gray-700">{item.platform}</span>
                       </div>
                       <span className="font-semibold text-gray-900">{item.count}</span>
@@ -131,7 +151,7 @@ export default function Home() {
                 {stats?.last30DaysByPlatform?.map((item, idx) => (
                   <div key={idx} className="px-4 py-2.5 flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      <span>{getPlatformIcon(item.platform)}</span>
+                      {renderPlatformIcon(item.platform)}
                       <span className="text-sm text-gray-700">{item.platform}</span>
                     </div>
                     <span className="font-semibold text-gray-900">{item.count}</span>
