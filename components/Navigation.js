@@ -9,6 +9,7 @@ export default function Navigation() {
   const navItems = [
     { href: '/', label: 'Dashboard', icon: '📊' },
     { href: '/zamowienia', label: 'Zamowienia', icon: '📦' },
+    { href: '/wms', label: 'WMS', icon: '🏭' },
     { href: '/crm', label: 'CRM', icon: '👥' },
   ];
 
