@@ -234,6 +234,16 @@ export default function OrderDetailsPage() {
                 <span className="text-gray-600">Data zamowienia:</span>
                 <span className="font-medium">{formatDate(order.dates?.orderedAt)}</span>
               </div>
+              {(order.dates?.sendDateMin || order.dates?.sendDateMax) && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Data wysylki:</span>
+                  <span className="font-medium">
+                    {order.dates?.sendDateMin ? formatDate(order.dates.sendDateMin).split(',')[0] : ''}
+                    {order.dates?.sendDateMin && order.dates?.sendDateMax ? ' - ' : ''}
+                    {order.dates?.sendDateMax ? formatDate(order.dates.sendDateMax).split(',')[0] : ''}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-gray-600">Kanal sprzedazy:</span>
                 <span className="font-medium">{order.channel?.label}</span>

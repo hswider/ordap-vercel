@@ -142,6 +142,11 @@ export default function OrderItem({ order }) {
               <div className="text-sm text-gray-500">
                 {formatDate(order.dates?.orderedAt)}
               </div>
+              {(order.dates?.sendDateMin || order.dates?.sendDateMax) && (
+                <div className="text-xs text-blue-600">
+                  Wysylka: {order.dates?.sendDateMin ? new Date(order.dates.sendDateMin).toLocaleDateString('pl-PL') : ''}{order.dates?.sendDateMin && order.dates?.sendDateMax ? ' - ' : ''}{order.dates?.sendDateMax ? new Date(order.dates.sendDateMax).toLocaleDateString('pl-PL') : ''}
+                </div>
+              )}
             </div>
             <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
