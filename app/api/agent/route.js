@@ -47,19 +47,19 @@ async function gatherContextData() {
     return {
       currentDate: new Date().toISOString().split('T')[0],
       today: {
-        orders: parseInt(todayStats.order_count) || 0,
-        revenue: parseFloat(todayStats.total_revenue) || 0,
-        avgOrderValue: parseFloat(todayStats.avg_order_value) || 0
+        orders: todayStats.order_count || 0,
+        revenuePln: todayStats.total_revenue_pln || 0,
+        avgOrderValuePln: todayStats.avg_order_value_pln || 0
       },
       yesterday: {
-        orders: parseInt(yesterdayStats.order_count) || 0,
-        revenue: parseFloat(yesterdayStats.total_revenue) || 0,
-        avgOrderValue: parseFloat(yesterdayStats.avg_order_value) || 0
+        orders: yesterdayStats.order_count || 0,
+        revenuePln: yesterdayStats.total_revenue_pln || 0,
+        avgOrderValuePln: yesterdayStats.avg_order_value_pln || 0
       },
       last7Days: {
-        orders: parseInt(last7DaysStats.order_count) || 0,
-        revenue: parseFloat(last7DaysStats.total_revenue) || 0,
-        avgOrderValue: parseFloat(last7DaysStats.avg_order_value) || 0,
+        orders: last7DaysStats.order_count || 0,
+        revenuePln: last7DaysStats.total_revenue_pln || 0,
+        avgOrderValuePln: last7DaysStats.avg_order_value_pln || 0,
         byPlatform: byPlatform.map(p => ({
           platform: p.channel_platform,
           orders: parseInt(p.order_count) || 0,
@@ -67,9 +67,9 @@ async function gatherContextData() {
         }))
       },
       last30Days: {
-        orders: parseInt(last30DaysStats.order_count) || 0,
-        revenue: parseFloat(last30DaysStats.total_revenue) || 0,
-        avgOrderValue: parseFloat(last30DaysStats.avg_order_value) || 0,
+        orders: last30DaysStats.order_count || 0,
+        revenuePln: last30DaysStats.total_revenue_pln || 0,
+        avgOrderValuePln: last30DaysStats.avg_order_value_pln || 0,
         dailyBreakdown: dailyStats.map(d => ({
           date: d.date,
           orders: parseInt(d.order_count) || 0,
@@ -77,12 +77,12 @@ async function gatherContextData() {
         }))
       },
       thisMonth: {
-        orders: parseInt(thisMonthStats.order_count) || 0,
-        revenue: parseFloat(thisMonthStats.total_revenue) || 0
+        orders: thisMonthStats.order_count || 0,
+        revenuePln: thisMonthStats.total_revenue_pln || 0
       },
       lastMonth: {
-        orders: parseInt(lastMonthStats.order_count) || 0,
-        revenue: parseFloat(lastMonthStats.total_revenue) || 0
+        orders: lastMonthStats.order_count || 0,
+        revenuePln: lastMonthStats.total_revenue_pln || 0
       },
       topProducts: topProducts.map(p => ({
         name: p.product_name,
@@ -115,52 +115,47 @@ async function callGroq(message, contextData) {
 
 WAŻNE ZASADY:
 - Odpowiadaj krótko i konkretnie
-- Używaj polskich nazw i formatowania walut (np. "1 234,56 PLN")
-- Kwoty w bazie są przeważnie w EUR, kurs EUR/PLN: ${EUR_TO_PLN}
-- Przy podawaniu kwot w PLN, przeliczaj z EUR i zaznacz to
+- Wszystkie kwoty są już przeliczone na PLN
+- Używaj polskiego formatowania walut (np. "1 234,56 PLN")
+- Formatuj liczby z separatorami tysięcy (spacja jako separator)
 - Jeśli nie masz danych na dane pytanie, powiedz o tym wprost
-- Formatuj liczby z separatorami tysięcy
-- Używaj emoji sparingly dla czytelności
 
 AKTUALNE DANE (stan na ${contextData?.currentDate || 'teraz'}):
 
 DZISIAJ:
 - Zamówień: ${contextData?.today?.orders || 0}
-- Obrót: ${contextData?.today?.revenue?.toFixed(2) || 0} EUR (≈ ${((contextData?.today?.revenue || 0) * EUR_TO_PLN).toFixed(2)} PLN)
-- Średnia wartość: ${contextData?.today?.avgOrderValue?.toFixed(2) || 0} EUR
+- Obrót: ${Math.round(contextData?.today?.revenuePln || 0).toLocaleString('pl-PL')} PLN
+- Średnia wartość zamówienia: ${Math.round(contextData?.today?.avgOrderValuePln || 0).toLocaleString('pl-PL')} PLN
 
 WCZORAJ:
 - Zamówień: ${contextData?.yesterday?.orders || 0}
-- Obrót: ${contextData?.yesterday?.revenue?.toFixed(2) || 0} EUR (≈ ${((contextData?.yesterday?.revenue || 0) * EUR_TO_PLN).toFixed(2)} PLN)
+- Obrót: ${Math.round(contextData?.yesterday?.revenuePln || 0).toLocaleString('pl-PL')} PLN
+- Średnia wartość zamówienia: ${Math.round(contextData?.yesterday?.avgOrderValuePln || 0).toLocaleString('pl-PL')} PLN
 
 OSTATNIE 7 DNI:
 - Zamówień: ${contextData?.last7Days?.orders || 0}
-- Obrót: ${contextData?.last7Days?.revenue?.toFixed(2) || 0} EUR (≈ ${((contextData?.last7Days?.revenue || 0) * EUR_TO_PLN).toFixed(2)} PLN)
+- Obrót: ${Math.round(contextData?.last7Days?.revenuePln || 0).toLocaleString('pl-PL')} PLN
 
 OSTATNIE 30 DNI:
 - Zamówień: ${contextData?.last30Days?.orders || 0}
-- Obrót: ${contextData?.last30Days?.revenue?.toFixed(2) || 0} EUR (≈ ${((contextData?.last30Days?.revenue || 0) * EUR_TO_PLN).toFixed(2)} PLN)
+- Obrót: ${Math.round(contextData?.last30Days?.revenuePln || 0).toLocaleString('pl-PL')} PLN
 
 TEN MIESIĄC:
 - Zamówień: ${contextData?.thisMonth?.orders || 0}
-- Obrót: ${contextData?.thisMonth?.revenue?.toFixed(2) || 0} EUR
+- Obrót: ${Math.round(contextData?.thisMonth?.revenuePln || 0).toLocaleString('pl-PL')} PLN
 
 POPRZEDNI MIESIĄC:
 - Zamówień: ${contextData?.lastMonth?.orders || 0}
-- Obrót: ${contextData?.lastMonth?.revenue?.toFixed(2) || 0} EUR
+- Obrót: ${Math.round(contextData?.lastMonth?.revenuePln || 0).toLocaleString('pl-PL')} PLN
 
 PLATFORMY (ostatnie 7 dni):
-${contextData?.last7Days?.byPlatform?.map(p => `- ${p.platform}: ${p.orders} zamówień, ${p.revenue?.toFixed(2)} EUR`).join('\n') || 'Brak danych'}
-
-DZIENNE STATYSTYKI (ostatnie 14 dni):
-${contextData?.last30Days?.dailyBreakdown?.map(d => `- ${d.date}: ${d.orders} zam., ${d.revenue?.toFixed(2)} EUR`).join('\n') || 'Brak danych'}
+${contextData?.last7Days?.byPlatform?.map(p => `- ${p.platform}: ${p.orders} zamówień`).join('\n') || 'Brak danych'}
 
 TOP 10 PRODUKTÓW (ostatnie 30 dni):
-${contextData?.topProducts?.map((p, i) => `${i+1}. ${p.name} (${p.sku || 'brak SKU'}): ${p.quantity} szt. w ${p.orders} zamówieniach`).join('\n') || 'Brak danych'}
+${contextData?.topProducts?.map((p, i) => `${i+1}. ${p.name} (${p.sku || 'brak SKU'}): ${p.quantity} szt.`).join('\n') || 'Brak danych'}
 
 OGÓLNE STATYSTYKI:
-- Wszystkie zamówienia: ${contextData?.overall?.totalOrders || 0}
-- Całkowity obrót: ${contextData?.overall?.totalRevenue?.toFixed(2) || 0} EUR
+- Wszystkie zamówienia w bazie: ${contextData?.overall?.totalOrders || 0}
 - Anulowane: ${contextData?.overall?.canceledOrders || 0}
 - Liczba platform: ${contextData?.overall?.platformCount || 0}`;
 
