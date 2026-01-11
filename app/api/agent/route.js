@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
 import {
-  getStatsForDateRange,
-  getStatsByPlatform,
-  getDailyStats,
-  getTopProducts,
-  getOverallStats,
-  getStatusDistribution
+  getTodayStats,
+  getYesterdayStats,
+  getLast7DaysStats,
+  getLast30DaysStats,
+  getThisMonthStats,
+  getLastMonthStats,
+  getStatsByPlatformLast7Days,
+  getDailyStatsLast14Days,
+  getTopProductsLast30Days,
+  getOverallStats
 } from '@/lib/db';
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
@@ -13,58 +17,8 @@ const GROQ_API_KEY = process.env.GROQ_API_KEY;
 // Currency conversion
 const EUR_TO_PLN = 4.35;
 
-// Helper to get date ranges
-function getDateRanges() {
-  const now = new Date();
-
-  // Today (start of day to now)
-  const todayStart = new Date(now);
-  todayStart.setHours(0, 0, 0, 0);
-
-  // Yesterday
-  const yesterdayStart = new Date(todayStart);
-  yesterdayStart.setDate(yesterdayStart.getDate() - 1);
-  const yesterdayEnd = new Date(todayStart);
-
-  // This week (Monday to now)
-  const weekStart = new Date(todayStart);
-  const dayOfWeek = weekStart.getDay();
-  const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-  weekStart.setDate(weekStart.getDate() - diff);
-
-  // Last 7 days
-  const last7Start = new Date(todayStart);
-  last7Start.setDate(last7Start.getDate() - 7);
-
-  // Last 30 days
-  const last30Start = new Date(todayStart);
-  last30Start.setDate(last30Start.getDate() - 30);
-
-  // This month
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-
-  // Last month
-  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 1);
-
-  return {
-    now,
-    todayStart,
-    yesterdayStart,
-    yesterdayEnd,
-    weekStart,
-    last7Start,
-    last30Start,
-    monthStart,
-    lastMonthStart,
-    lastMonthEnd
-  };
-}
-
-// Gather context data for AI
+// Gather context data for AI using PostgreSQL CURRENT_DATE for consistency
 async function gatherContextData() {
-  const dates = getDateRanges();
-
   try {
     const [
       todayStats,
@@ -73,38 +27,29 @@ async function gatherContextData() {
       last30DaysStats,
       thisMonthStats,
       lastMonthStats,
-      todayByPlatform,
-      last7DaysByPlatform,
+      byPlatform,
       dailyStats,
       topProducts,
-      overallStats,
-      statusDistribution
+      overallStats
     ] = await Promise.all([
-      getStatsForDateRange(dates.todayStart, dates.now),
-      getStatsForDateRange(dates.yesterdayStart, dates.yesterdayEnd),
-      getStatsForDateRange(dates.last7Start, dates.now),
-      getStatsForDateRange(dates.last30Start, dates.now),
-      getStatsForDateRange(dates.monthStart, dates.now),
-      getStatsForDateRange(dates.lastMonthStart, dates.lastMonthEnd),
-      getStatsByPlatform(dates.todayStart, dates.now),
-      getStatsByPlatform(dates.last7Start, dates.now),
-      getDailyStats(dates.last30Start, dates.now),
-      getTopProducts(dates.last30Start, dates.now, 10),
-      getOverallStats(),
-      getStatusDistribution()
+      getTodayStats(),
+      getYesterdayStats(),
+      getLast7DaysStats(),
+      getLast30DaysStats(),
+      getThisMonthStats(),
+      getLastMonthStats(),
+      getStatsByPlatformLast7Days(),
+      getDailyStatsLast14Days(),
+      getTopProductsLast30Days(10),
+      getOverallStats()
     ]);
 
     return {
-      currentDate: dates.now.toISOString().split('T')[0],
+      currentDate: new Date().toISOString().split('T')[0],
       today: {
         orders: parseInt(todayStats.order_count) || 0,
         revenue: parseFloat(todayStats.total_revenue) || 0,
-        avgOrderValue: parseFloat(todayStats.avg_order_value) || 0,
-        byPlatform: todayByPlatform.map(p => ({
-          platform: p.channel_platform,
-          orders: parseInt(p.order_count) || 0,
-          revenue: parseFloat(p.total_revenue) || 0
-        }))
+        avgOrderValue: parseFloat(todayStats.avg_order_value) || 0
       },
       yesterday: {
         orders: parseInt(yesterdayStats.order_count) || 0,
@@ -115,7 +60,7 @@ async function gatherContextData() {
         orders: parseInt(last7DaysStats.order_count) || 0,
         revenue: parseFloat(last7DaysStats.total_revenue) || 0,
         avgOrderValue: parseFloat(last7DaysStats.avg_order_value) || 0,
-        byPlatform: last7DaysByPlatform.map(p => ({
+        byPlatform: byPlatform.map(p => ({
           platform: p.channel_platform,
           orders: parseInt(p.order_count) || 0,
           revenue: parseFloat(p.total_revenue) || 0
@@ -125,7 +70,7 @@ async function gatherContextData() {
         orders: parseInt(last30DaysStats.order_count) || 0,
         revenue: parseFloat(last30DaysStats.total_revenue) || 0,
         avgOrderValue: parseFloat(last30DaysStats.avg_order_value) || 0,
-        dailyBreakdown: dailyStats.slice(0, 14).map(d => ({
+        dailyBreakdown: dailyStats.map(d => ({
           date: d.date,
           orders: parseInt(d.order_count) || 0,
           revenue: parseFloat(d.total_revenue) || 0
