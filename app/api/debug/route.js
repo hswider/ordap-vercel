@@ -25,21 +25,52 @@ export async function GET(request) {
     // Get platform map
     const platformMapRes = await axios.get(`${baseUrl}/rest/api/orders/platform/map/`, { headers });
 
+    // Build platform map like in apilo.js
+    const platformMap = {};
+    if (Array.isArray(platformMapRes.data)) {
+      platformMapRes.data.forEach(p => {
+        platformMap[p.id] = {
+          name: p.description || p.name,
+          platform: p.name
+        };
+      });
+    }
+
     // Get one order to see structure
     let orderData = null;
+    let mappedChannel = null;
+
     if (orderId) {
-      const orderRes = await axios.get(`${baseUrl}/rest/api/orders/${orderId}/`, { headers });
-      orderData = orderRes.data;
+      // Get specific order
+      const ordersRes = await axios.get(`${baseUrl}/rest/api/orders/?limit=100`, { headers });
+      const orders = ordersRes.data?.orders || [];
+      orderData = orders.find(o => o.id === orderId) || null;
     } else {
       const ordersRes = await axios.get(`${baseUrl}/rest/api/orders/?limit=1`, { headers });
       orderData = ordersRes.data?.orders?.[0] || null;
     }
 
+    if (orderData) {
+      const platformId = orderData.platformAccountId || orderData.platformId;
+      const platformInfo = platformMap[platformId] || {};
+      mappedChannel = {
+        platformId,
+        platformAccountId: orderData.platformAccountId,
+        rawPlatformId: orderData.platformId,
+        mappedLabel: platformInfo.name || `Platform ${platformId}`,
+        mappedPlatform: platformInfo.platform || 'Unknown'
+      };
+    }
+
     return NextResponse.json({
-      platformMap: platformMapRes.data,
-      sampleOrder: orderData,
-      platformMapKeys: Object.keys(platformMapRes.data || {}),
-      orderKeys: orderData ? Object.keys(orderData) : []
+      platformMapSample: Object.fromEntries(Object.entries(platformMap).slice(0, 10)),
+      sampleOrder: orderData ? {
+        id: orderData.id,
+        platformId: orderData.platformId,
+        platformAccountId: orderData.platformAccountId,
+        allKeys: Object.keys(orderData)
+      } : null,
+      mappedChannel
     });
   } catch (error) {
     console.error('[Debug] Error:', error.response?.data || error.message);
