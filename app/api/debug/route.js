@@ -81,9 +81,17 @@ export async function GET(request) {
       });
     }
 
-    // Get newest orders
-    const ordersRes = await axios.get(`${baseUrl}/rest/api/orders/?limit=10&sort=orderedAtDesc`, { headers });
+    // Get newest orders - same as sync endpoint
+    const ordersRes = await axios.get(`${baseUrl}/rest/api/orders/?limit=500&offset=0&sort=orderedAtDesc`, { headers });
     const orders = ordersRes.data?.orders || [];
+
+    // Check if specific orders exist in the API response
+    const orderIds = orders.map(o => o.id);
+    const checkOrders = ['AM260101867', 'AM260101868', 'AM260101865', 'AM260101863'];
+    const foundInList = {};
+    checkOrders.forEach(id => {
+      foundInList[id] = orderIds.includes(id);
+    });
 
     // Show the 3 newest orders with full details
     const newestOrders = orders.slice(0, 3).map(o => {
@@ -129,10 +137,11 @@ export async function GET(request) {
 
     return NextResponse.json({
       totalPlatforms: Object.keys(platformMap).length,
+      totalOrdersInBatch: orders.length,
+      foundInList,
+      firstOrderInBatch: orders[0]?.id,
       newestOrders,
-      amazonPlatforms,
-      debugOrders,
-      rawPlatformMapSample: platformMapRes.data?.slice(0, 3)
+      amazonPlatforms
     });
   } catch (error) {
     console.error('[Debug] Error:', error.response?.data || error.message);
