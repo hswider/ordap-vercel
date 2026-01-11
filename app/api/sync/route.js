@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { initDatabase, saveOrders } from '@/lib/db';
-import { fetchOrders } from '@/lib/apilo';
+import { initDatabase, saveOrders, getLastSyncDate } from '@/lib/db';
+import { fetchAllNewOrders } from '@/lib/apilo';
 
 export async function GET(request) {
   // Verify cron secret for security (optional)
@@ -16,11 +16,22 @@ export async function GET(request) {
 
     await initDatabase();
 
-    // Fetch more orders (100 instead of 10)
-    const orders = await fetchOrders(100, 0);
-    await saveOrders(orders);
+    // Get last sync date to only fetch new/updated orders
+    const lastSyncDate = await getLastSyncDate();
+    console.log('[Sync] Last sync:', lastSyncDate);
 
-    console.log('[Sync] Saved', orders.length, 'orders');
+    // Fetch all orders (new ones will be added, existing ones updated)
+    // On first sync (no lastSyncDate), fetch up to 2000 orders
+    // On subsequent syncs, fetch only updated orders
+    const maxOrders = lastSyncDate ? 1000 : 2000;
+    const orders = await fetchAllNewOrders(null, maxOrders);
+
+    if (orders.length > 0) {
+      await saveOrders(orders);
+      console.log('[Sync] Saved', orders.length, 'orders');
+    } else {
+      console.log('[Sync] No new orders to save');
+    }
 
     return NextResponse.json({
       success: true,
