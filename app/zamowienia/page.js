@@ -12,13 +12,14 @@ export default function ZamowieniaPage() {
   const [error, setError] = useState(null);
   const [syncing, setSyncing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [perPage, setPerPage] = useState(20);
 
-  const fetchOrders = useCallback(async (page = 1, search = '') => {
+  const fetchOrders = useCallback(async (page = 1, search = '', itemsPerPage = 20) => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
         page: page.toString(),
-        perPage: '20'
+        perPage: itemsPerPage.toString()
       });
 
       if (search) {
@@ -45,12 +46,17 @@ export default function ZamowieniaPage() {
 
   const handleSearch = (query) => {
     setSearchQuery(query);
-    fetchOrders(1, query);
+    fetchOrders(1, query, perPage);
   };
 
   const handlePageChange = (newPage) => {
-    fetchOrders(newPage, searchQuery);
+    fetchOrders(newPage, searchQuery, perPage);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handlePerPageChange = (newPerPage) => {
+    setPerPage(newPerPage);
+    fetchOrders(1, searchQuery, newPerPage);
   };
 
   const triggerSync = async () => {
@@ -62,7 +68,7 @@ export default function ZamowieniaPage() {
       if (data.error) {
         setError(data.error);
       } else {
-        await fetchOrders(1, searchQuery);
+        await fetchOrders(1, searchQuery, perPage);
       }
     } catch (err) {
       setError('Synchronizacja nie powiodla sie');
@@ -72,7 +78,7 @@ export default function ZamowieniaPage() {
   };
 
   useEffect(() => {
-    fetchOrders(1, '');
+    fetchOrders(1, '', 20);
   }, [fetchOrders]);
 
   return (
@@ -99,9 +105,24 @@ export default function ZamowieniaPage() {
           </button>
         </div>
 
-        {/* Search Box */}
-        <div className="mb-6">
-          <SearchBox onSearch={handleSearch} initialValue={searchQuery} />
+        {/* Search Box and Per Page Selector */}
+        <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+          <div className="flex-grow">
+            <SearchBox onSearch={handleSearch} initialValue={searchQuery} />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">Pokazuj:</span>
+            <select
+              value={perPage}
+              onChange={(e) => handlePerPageChange(Number(e.target.value))}
+              className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+            <span className="text-sm text-gray-600">na stronie</span>
+          </div>
         </div>
 
         {/* Content */}
