@@ -6,39 +6,79 @@ import Pagination from '@/components/Pagination';
 import SearchBox from '@/components/SearchBox';
 
 const statusMap = {
+  // Podstawowe
   4: { label: 'Niepotwierdzone', color: 'bg-gray-100 text-gray-800' },
   1: { label: 'Nowy', color: 'bg-blue-100 text-blue-800' },
   7: { label: 'W realizacji', color: 'bg-yellow-100 text-yellow-800' },
   10: { label: 'Do wysłania', color: 'bg-purple-100 text-purple-800' },
   13: { label: 'Wysłane', color: 'bg-green-100 text-green-800' },
+  19: { label: 'Anulowane', color: 'bg-gray-200 text-gray-800' },
+  16: { label: 'Zduplikowane', color: 'bg-gray-200 text-gray-800' },
+  // PALETY
   22: { label: 'PALETY-NOWE', color: 'bg-blue-100 text-blue-800' },
   113: { label: 'PALETY-W REALIZACJI', color: 'bg-yellow-100 text-yellow-800' },
   166: { label: 'PILNE - PALETY', color: 'bg-orange-100 text-orange-800' },
   169: { label: 'BARDZO PILNE - PALETY', color: 'bg-red-100 text-red-800' },
+  // PIKÓWKI
   25: { label: 'PIKÓWKI-NOWE', color: 'bg-blue-100 text-blue-800' },
   116: { label: 'PIKÓWKI-W REALIZACJI', color: 'bg-yellow-100 text-yellow-800' },
   103: { label: 'PILNE - PIKÓWKI', color: 'bg-orange-100 text-orange-800' },
   106: { label: 'BARDZO PILNE - PIKÓWKI', color: 'bg-red-100 text-red-800' },
+  // ŁAWKI
   28: { label: 'ŁAWKI-NOWE', color: 'bg-blue-100 text-blue-800' },
   119: { label: 'ŁAWKI-W REALIZACJI', color: 'bg-yellow-100 text-yellow-800' },
   172: { label: 'PILNE - ŁAWKI', color: 'bg-orange-100 text-orange-800' },
   175: { label: 'BARDZO PILNE - ŁAWKI', color: 'bg-red-100 text-red-800' },
+  // ŁAWKI SIEDZISKA
   199: { label: 'ŁAWKI SIEDZISKA-NOWE', color: 'bg-blue-100 text-blue-800' },
   205: { label: 'ŁAWKI SIEDZISKA-W REALIZACJI', color: 'bg-yellow-100 text-yellow-800' },
   178: { label: 'PILNE - ŁAWKI SIEDZISKA', color: 'bg-orange-100 text-orange-800' },
   181: { label: 'BARDZO PILNE - ŁAWKI SIEDZISKA', color: 'bg-red-100 text-red-800' },
+  // POOM KIDS
   31: { label: 'POOM KIDS-NOWE', color: 'bg-blue-100 text-blue-800' },
   122: { label: 'POOM KIDS-W REALIZACJI', color: 'bg-yellow-100 text-yellow-800' },
   228: { label: 'PILNE - POOM KIDS', color: 'bg-orange-100 text-orange-800' },
   225: { label: 'BARDZO PILNE - POOM KIDS', color: 'bg-red-100 text-red-800' },
+  // LEGOWISKA
   46: { label: 'LEGOWISKA-NOWE', color: 'bg-blue-100 text-blue-800' },
   131: { label: 'LEGOWISKA-W REALIZACJI', color: 'bg-yellow-100 text-yellow-800' },
   184: { label: 'PILNE - LEGOWISKA', color: 'bg-orange-100 text-orange-800' },
   187: { label: 'BARDZO PILNE - LEGOWISKA', color: 'bg-red-100 text-red-800' },
+  // SARIS GARAGE
   57: { label: 'SARIS GARAGE-NOWE', color: 'bg-blue-100 text-blue-800' },
   125: { label: 'SARIS GARAGE-W REALIZACJI', color: 'bg-yellow-100 text-yellow-800' },
   220: { label: 'SARIS GARAGE BARDZO PILNE', color: 'bg-red-100 text-red-800' },
-  209: { label: 'SARIS GARAGE NIESTANDARDY - Nowe', color: 'bg-blue-100 text-blue-800' }
+  209: { label: 'SARIS GARAGE NIESTANDARDY - Nowe', color: 'bg-blue-100 text-blue-800' },
+  212: { label: 'SARIS GARAGE NIESTANDARDY - W REALIZACJI', color: 'bg-yellow-100 text-yellow-800' },
+  // MEBLE OGRODOWE
+  82: { label: 'MEBLE OGRODOWE-NOWE', color: 'bg-blue-100 text-blue-800' },
+  128: { label: 'MEBLE OGRODOWE-W REALIZACJI', color: 'bg-yellow-100 text-yellow-800' },
+  // INDYWIDUALNE
+  134: { label: 'INDYWIDUALNE-NOWE', color: 'bg-blue-100 text-blue-800' },
+  137: { label: 'INDYWIDUALNE-W REALIZACJI', color: 'bg-yellow-100 text-yellow-800' },
+  // HOUSE
+  155: { label: 'HOUSE NOWE ZAMÓWIENIA', color: 'bg-blue-100 text-blue-800' },
+  158: { label: 'HOUSE PRODUKCJA', color: 'bg-yellow-100 text-yellow-800' },
+  161: { label: 'HOUSE WYPRODUKOWANE', color: 'bg-green-100 text-green-800' },
+  // Dosyłki i inne
+  85: { label: 'MEBLE DOSYŁKA', color: 'bg-purple-100 text-purple-800' },
+  110: { label: 'Dosyłka', color: 'bg-purple-100 text-purple-800' },
+  60: { label: 'ETYKIETY DO ZR', color: 'bg-gray-100 text-gray-800' },
+  // Wyjaśnienia
+  97: { label: 'ZAM DO WYJAŚ', color: 'bg-orange-100 text-orange-800' },
+  100: { label: 'WYJAŚNIONE', color: 'bg-green-100 text-green-800' },
+  214: { label: 'UPS DO WYJASNIENIA', color: 'bg-orange-100 text-orange-800' },
+  217: { label: 'UPS WYJASNIONE', color: 'bg-green-100 text-green-800' },
+  233: { label: 'DO WYJASNIENIA KAROLA', color: 'bg-orange-100 text-orange-800' },
+  // Zwroty i problemy
+  63: { label: 'ODSTĄPIENIE OD UMOWY', color: 'bg-red-100 text-red-800' },
+  81: { label: 'BEZ ODBIORU', color: 'bg-red-100 text-red-800' },
+  223: { label: 'ZWROT NIEMCY', color: 'bg-red-100 text-red-800' },
+  69: { label: 'BARCZEWO WRÓCIŁO', color: 'bg-red-100 text-red-800' },
+  78: { label: 'ZWRÓCONE ŚRODKI', color: 'bg-green-100 text-green-800' },
+  231: { label: 'WRÓCIŁO POLSKA', color: 'bg-red-100 text-red-800' },
+  // Amazon
+  188: { label: 'AMAZON W BLu', color: 'bg-yellow-100 text-yellow-800' }
 };
 
 export default function ZamowieniaPage() {
