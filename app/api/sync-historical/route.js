@@ -4,7 +4,15 @@ import { fetchOrdersFromDateRange } from '@/lib/apilo';
 
 export const maxDuration = 300; // 5 minutes timeout for Vercel
 
+export async function GET(request) {
+  return runSync();
+}
+
 export async function POST(request) {
+  return runSync();
+}
+
+async function runSync() {
   try {
     console.log('[Sync-Historical] Starting historical sync (last 30 days)...');
 
