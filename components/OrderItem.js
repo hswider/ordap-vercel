@@ -32,14 +32,29 @@ export default function OrderItem({ order }) {
     return icons[platform] || platform?.charAt(0) || '?';
   };
 
+  const renderPlatformIcon = (platform) => {
+    if (platform === 'Amazon') {
+      return (
+        <img
+          src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQoIwGv61BBxMlFDmBHeDvMo8-5HNlM4_8Skw&s"
+          alt="Amazon"
+          className="w-10 h-10 rounded-full object-cover"
+        />
+      );
+    }
+    return (
+      <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+        {getPlatformIcon(platform)}
+      </div>
+    );
+  };
+
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       {/* Order Header */}
       <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
-            {getPlatformIcon(order.channel?.platform)}
-          </div>
+          {renderPlatformIcon(order.channel?.platform)}
           <div>
             <div className="font-semibold text-gray-900">
               {order.channel?.label || 'Nieznany kanal'}
