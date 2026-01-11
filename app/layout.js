@@ -2,8 +2,8 @@ import './globals.css';
 import Navigation from '@/components/Navigation';
 
 export const metadata = {
-  title: 'OrdAp - Apilo Dashboard',
-  description: 'Dashboard zamowien z Apilo',
+  title: 'Centrala Poom-Furniture',
+  description: 'Dashboard zamowien Poom-Furniture',
 };
 
 export default function RootLayout({ children }) {

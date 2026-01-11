@@ -16,8 +16,13 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
-            <div className="flex-shrink-0 flex items-center">
-              <span className="text-2xl font-bold text-blue-600">OrdAp</span>
+            <div className="flex-shrink-0 flex items-center gap-3">
+              <img
+                src="https://cdn.shopify.com/s/files/1/0974/8525/9083/files/dxzadaa.png?v=1763118294"
+                alt="Poom-Furniture Logo"
+                className="h-10 w-auto"
+              />
+              <span className="text-xl font-bold text-gray-800">Centrala Poom-Furniture</span>
             </div>
             <div className="hidden sm:ml-8 sm:flex sm:space-x-4">
               {navItems.map((item) => (
