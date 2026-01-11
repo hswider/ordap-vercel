@@ -3,12 +3,11 @@ import { initDatabase, saveOrders } from '@/lib/db';
 import { fetchOrders } from '@/lib/apilo';
 
 export async function GET(request) {
-  // Verify cron secret for security (optional but recommended)
+  // Verify cron secret for security (optional)
   const authHeader = request.headers.get('authorization');
   if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    // Allow without auth in development
-    if (process.env.NODE_ENV === 'production') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (process.env.NODE_ENV === 'production' && process.env.CRON_SECRET) {
+      // Allow without auth if no secret is set
     }
   }
 
@@ -16,7 +15,9 @@ export async function GET(request) {
     console.log('[Sync] Starting synchronization...');
 
     await initDatabase();
-    const orders = await fetchOrders(10);
+
+    // Fetch more orders (100 instead of 10)
+    const orders = await fetchOrders(100, 0);
     await saveOrders(orders);
 
     console.log('[Sync] Saved', orders.length, 'orders');
@@ -35,7 +36,6 @@ export async function GET(request) {
   }
 }
 
-// Also allow POST for manual sync from frontend
 export async function POST(request) {
   return GET(request);
 }

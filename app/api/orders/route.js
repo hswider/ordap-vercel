@@ -1,13 +1,19 @@
 import { NextResponse } from 'next/server';
 import { getOrders, initDatabase } from '@/lib/db';
 
-export async function GET() {
+export async function GET(request) {
   try {
     await initDatabase();
-    const orders = await getOrders(10);
+
+    // Get pagination params from URL
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page')) || 1;
+    const perPage = parseInt(searchParams.get('perPage')) || 20;
+
+    const result = await getOrders(page, perPage);
 
     return NextResponse.json({
-      orders,
+      ...result,
       lastSync: new Date().toISOString()
     });
   } catch (error) {

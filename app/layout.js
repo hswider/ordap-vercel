@@ -1,4 +1,5 @@
 import './globals.css';
+import Navigation from '@/components/Navigation';
 
 export const metadata = {
   title: 'OrdAp - Apilo Dashboard',
@@ -8,7 +9,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="pl">
-      <body>{children}</body>
+      <body>
+        <Navigation />
+        {children}
+      </body>
     </html>
   );
 }
