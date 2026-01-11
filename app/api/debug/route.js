@@ -11,6 +11,9 @@ export async function GET(request) {
       return NextResponse.json({ error: 'No tokens' }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const checkOrderId = searchParams.get('orderId');
+
     const headers = {
       'Authorization': `Bearer ${tokens.access_token}`,
       'Content-Type': 'application/json',
@@ -18,6 +21,51 @@ export async function GET(request) {
     };
 
     const baseUrl = process.env.APILO_BASE_URL;
+
+    // If specific order requested, fetch it
+    if (checkOrderId) {
+      try {
+        const orderRes = await axios.get(`${baseUrl}/rest/api/orders/${checkOrderId}/`, { headers });
+        const platformMapRes = await axios.get(`${baseUrl}/rest/api/orders/platform/map/`, { headers });
+
+        const platformMap = {};
+        if (Array.isArray(platformMapRes.data)) {
+          platformMapRes.data.forEach(p => {
+            platformMap[p.id] = {
+              name: p.description || p.name,
+              platform: p.name
+            };
+          });
+        }
+
+        const order = orderRes.data;
+        const platformId = order.platformAccountId || order.platformId;
+        const platformInfo = platformMap[platformId];
+
+        return NextResponse.json({
+          orderId: checkOrderId,
+          found: true,
+          rawOrder: {
+            id: order.id,
+            platformAccountId: order.platformAccountId,
+            platformId: order.platformId,
+            orderedAt: order.orderedAt
+          },
+          platformMapping: {
+            lookupKey: platformId,
+            platformInfo,
+            mappedLabel: platformInfo?.name || `Platform ${platformId}`
+          }
+        });
+      } catch (e) {
+        return NextResponse.json({
+          orderId: checkOrderId,
+          found: false,
+          error: e.message,
+          apiError: e.response?.data
+        });
+      }
+    }
 
     // Get platform map
     const platformMapRes = await axios.get(`${baseUrl}/rest/api/orders/platform/map/`, { headers });
