@@ -79,7 +79,7 @@ export async function GET(request, { params }) {
     }
 
     // If shipping data is missing, fetch from Apilo API
-    if (!order.shipping && !order.customer?.street) {
+    if (!order.shipping || !order.payments || order.payments.length === 0) {
       const tokens = await getTokens();
       if (tokens?.access_token) {
         const apiloData = await fetchOrderFromApilo(id, tokens.access_token);
