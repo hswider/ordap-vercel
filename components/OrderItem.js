@@ -33,11 +33,18 @@ export default function OrderItem({ order }) {
   };
 
   const renderPlatformIcon = (platform) => {
-    if (platform === 'Amazon') {
+    const platformIcons = {
+      'Amazon': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQoIwGv61BBxMlFDmBHeDvMo8-5HNlM4_8Skw&s',
+      'Allegro': 'https://a.allegroimg.com/original/12c30c/0d4b068640de9b0daf22af9d97c5',
+      'Shopify': 'https://images.icon-icons.com/836/PNG/512/Shopify_icon-icons.com_66757.png',
+      'Kaufland': 'https://logotypy.net/wp-content/uploads/2023/09/logo-kaufland.jpg'
+    };
+
+    if (platformIcons[platform]) {
       return (
         <img
-          src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQoIwGv61BBxMlFDmBHeDvMo8-5HNlM4_8Skw&s"
-          alt="Amazon"
+          src={platformIcons[platform]}
+          alt={platform}
           className="w-10 h-10 rounded-full object-cover"
         />
       );
