@@ -17,11 +17,14 @@ export async function GET() {
   try {
     await initDatabase();
 
-    // Orders today by platform
+    // Use Polish timezone for date calculations
+    const TZ = 'Europe/Warsaw';
+
+    // Orders today by platform (Polish timezone)
     const todayByPlatform = await sql`
       SELECT channel_platform as platform, COUNT(*) as count
       FROM orders
-      WHERE ordered_at >= CURRENT_DATE
+      WHERE ordered_at >= (CURRENT_DATE AT TIME ZONE 'Europe/Warsaw')
       GROUP BY channel_platform
       ORDER BY count DESC
     `;
@@ -30,37 +33,37 @@ export async function GET() {
     const last30DaysByPlatform = await sql`
       SELECT channel_platform as platform, COUNT(*) as count
       FROM orders
-      WHERE ordered_at >= CURRENT_DATE - INTERVAL '30 days'
+      WHERE ordered_at >= (CURRENT_DATE AT TIME ZONE 'Europe/Warsaw') - INTERVAL '30 days'
       GROUP BY channel_platform
       ORDER BY count DESC
     `;
 
-    // Orders today total
+    // Orders today total (Polish timezone)
     const ordersToday = await sql`
       SELECT COUNT(*) as count FROM orders
-      WHERE ordered_at >= CURRENT_DATE
+      WHERE ordered_at >= (CURRENT_DATE AT TIME ZONE 'Europe/Warsaw')
     `;
 
-    // Orders yesterday total
+    // Orders yesterday total (Polish timezone)
     const ordersYesterday = await sql`
       SELECT COUNT(*) as count FROM orders
-      WHERE ordered_at >= CURRENT_DATE - INTERVAL '1 day'
-        AND ordered_at < CURRENT_DATE
+      WHERE ordered_at >= (CURRENT_DATE AT TIME ZONE 'Europe/Warsaw') - INTERVAL '1 day'
+        AND ordered_at < (CURRENT_DATE AT TIME ZONE 'Europe/Warsaw')
     `;
 
     // Shipped today (delivery_status = 13 means shipped)
     const shippedToday = await sql`
       SELECT COUNT(*) as count FROM orders
       WHERE delivery_status = 13
-        AND updated_at >= CURRENT_DATE
+        AND updated_at >= (CURRENT_DATE AT TIME ZONE 'Europe/Warsaw')
     `;
 
     // Shipped yesterday
     const shippedYesterday = await sql`
       SELECT COUNT(*) as count FROM orders
       WHERE delivery_status = 13
-        AND updated_at >= CURRENT_DATE - INTERVAL '1 day'
-        AND updated_at < CURRENT_DATE
+        AND updated_at >= (CURRENT_DATE AT TIME ZONE 'Europe/Warsaw') - INTERVAL '1 day'
+        AND updated_at < (CURRENT_DATE AT TIME ZONE 'Europe/Warsaw')
     `;
 
     // Total orders
@@ -68,11 +71,11 @@ export async function GET() {
       SELECT COUNT(*) as count FROM orders
     `;
 
-    // Revenue today by currency
+    // Revenue today by currency (Polish timezone)
     const revenueToday = await sql`
       SELECT currency, SUM(total_gross) as total
       FROM orders
-      WHERE ordered_at >= CURRENT_DATE
+      WHERE ordered_at >= (CURRENT_DATE AT TIME ZONE 'Europe/Warsaw')
       GROUP BY currency
     `;
 
@@ -80,19 +83,19 @@ export async function GET() {
     const revenue30Days = await sql`
       SELECT currency, SUM(total_gross) as total
       FROM orders
-      WHERE ordered_at >= CURRENT_DATE - INTERVAL '30 days'
+      WHERE ordered_at >= (CURRENT_DATE AT TIME ZONE 'Europe/Warsaw') - INTERVAL '30 days'
       GROUP BY currency
     `;
 
-    // Revenue last 30 days by day
+    // Revenue last 30 days by day (Polish timezone)
     const revenueLast30Days = await sql`
       SELECT
-        DATE(ordered_at) as date,
+        DATE(ordered_at AT TIME ZONE 'Europe/Warsaw') as date,
         currency,
         SUM(total_gross) as total
       FROM orders
-      WHERE ordered_at >= CURRENT_DATE - INTERVAL '30 days'
-      GROUP BY DATE(ordered_at), currency
+      WHERE ordered_at >= (CURRENT_DATE AT TIME ZONE 'Europe/Warsaw') - INTERVAL '30 days'
+      GROUP BY DATE(ordered_at AT TIME ZONE 'Europe/Warsaw'), currency
       ORDER BY date ASC
     `;
 
