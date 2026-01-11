@@ -33,8 +33,8 @@ export async function GET(request) {
       console.log('[Sync] No new orders to save');
     }
 
-    // Fetch send dates for orders missing them (max 50 per sync to stay within rate limits)
-    const ordersMissingSendDates = await getOrdersMissingSendDates(50);
+    // Fetch send dates for orders missing them (max 15 per sync to stay within timeout)
+    const ordersMissingSendDates = await getOrdersMissingSendDates(15);
     let sendDatesUpdated = 0;
 
     if (ordersMissingSendDates.length > 0) {
@@ -47,7 +47,7 @@ export async function GET(request) {
           sendDatesUpdated++;
         }
         // Small delay to respect API rate limits (150 req/min)
-        await new Promise(resolve => setTimeout(resolve, 450));
+        await new Promise(resolve => setTimeout(resolve, 200));
       }
 
       console.log('[Sync] Updated send dates for', sendDatesUpdated, 'orders');
