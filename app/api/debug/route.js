@@ -12,7 +12,7 @@ export async function GET(request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const orderId = searchParams.get('orderId');
+    const checkPlatformId = searchParams.get('platformId');
 
     const headers = {
       'Authorization': `Bearer ${tokens.access_token}`,
@@ -36,41 +36,29 @@ export async function GET(request) {
       });
     }
 
-    // Get one order to see structure
-    let orderData = null;
-    let mappedChannel = null;
-
-    if (orderId) {
-      // Get specific order
-      const ordersRes = await axios.get(`${baseUrl}/rest/api/orders/?limit=100`, { headers });
-      const orders = ordersRes.data?.orders || [];
-      orderData = orders.find(o => o.id === orderId) || null;
-    } else {
-      const ordersRes = await axios.get(`${baseUrl}/rest/api/orders/?limit=1`, { headers });
-      orderData = ordersRes.data?.orders?.[0] || null;
+    // Check specific platformId if requested
+    let specificPlatform = null;
+    if (checkPlatformId) {
+      specificPlatform = platformMap[checkPlatformId] || null;
     }
 
-    if (orderData) {
-      const platformId = orderData.platformAccountId || orderData.platformId;
-      const platformInfo = platformMap[platformId] || {};
-      mappedChannel = {
-        platformId,
-        platformAccountId: orderData.platformAccountId,
-        rawPlatformId: orderData.platformId,
-        mappedLabel: platformInfo.name || `Platform ${platformId}`,
-        mappedPlatform: platformInfo.platform || 'Unknown'
-      };
-    }
+    // Get sample orders with different platforms
+    const ordersRes = await axios.get(`${baseUrl}/rest/api/orders/?limit=20`, { headers });
+    const orders = ordersRes.data?.orders || [];
+
+    const orderSamples = orders.slice(0, 5).map(o => ({
+      id: o.id,
+      platformAccountId: o.platformAccountId,
+      mappedTo: platformMap[o.platformAccountId] || { name: `Platform ${o.platformAccountId}`, platform: 'Unknown' }
+    }));
 
     return NextResponse.json({
-      platformMapSample: Object.fromEntries(Object.entries(platformMap).slice(0, 10)),
-      sampleOrder: orderData ? {
-        id: orderData.id,
-        platformId: orderData.platformId,
-        platformAccountId: orderData.platformAccountId,
-        allKeys: Object.keys(orderData)
-      } : null,
-      mappedChannel
+      totalPlatforms: Object.keys(platformMap).length,
+      platform121: platformMap[121] || 'NOT FOUND',
+      platform124: platformMap[124] || 'NOT FOUND',
+      platform127: platformMap[127] || 'NOT FOUND',
+      specificPlatform,
+      orderSamples
     });
   } catch (error) {
     console.error('[Debug] Error:', error.response?.data || error.message);
